@@ -3,10 +3,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Estación Oceanográfica: María Antonieta & Tío Manchas</title>
-    <!-- Tailwind CSS para el diseño adaptable y moderno -->
+    <title>Estación Oceanográfica Avanzada: Centro de Telemetría Marina</title>
+    <!-- Tailwind CSS para diseño adaptable de alta tecnología -->
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- Google Fonts para tipografías premium y legibles -->
+    <!-- Fuentes científicas y de ciencia ficción -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@300..700&family=Share+Tech+Mono&family=Nunito:wght@300..900&display=swap" rel="stylesheet">
@@ -27,68 +27,41 @@
         .font-mono-sci {
             font-family: 'Share Tech Mono', monospace;
         }
-        /* Estilo de vidrio esmerilado para paneles tácticos */
+        /* Paneles tácticos de cristal */
         .glass-panel {
-            background: rgba(15, 23, 42, 0.75);
-            backdrop-filter: blur(12px);
-            border: 2px solid rgba(56, 189, 248, 0.2);
-            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.5);
+            background: rgba(15, 23, 42, 0.8);
+            backdrop-filter: blur(16px);
+            border: 2px solid rgba(56, 189, 248, 0.25);
+            box-shadow: 0 12px 40px 0 rgba(0, 0, 0, 0.6);
         }
         .glass-panel-amber {
-            background: rgba(15, 23, 42, 0.8);
-            backdrop-filter: blur(12px);
-            border: 2px solid rgba(245, 158, 11, 0.25);
-            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.5);
+            background: rgba(15, 23, 42, 0.85);
+            backdrop-filter: blur(16px);
+            border: 2px solid rgba(245, 158, 11, 0.3);
+            box-shadow: 0 12px 40px 0 rgba(0, 0, 0, 0.6);
         }
-        /* Barra de desplazamiento submarina */
-        ::-webkit-scrollbar {
-            width: 14px;
+        /* Estructura para rompecabezas deslizante con imagen */
+        .puzzle-tile {
+            background-size: 300px 300px;
+            background-repeat: no-repeat;
+            transition: transform 0.2s ease, border-color 0.2s ease;
         }
-        ::-webkit-scrollbar-track {
-            background: #020617;
-        }
-        ::-webkit-scrollbar-thumb {
-            background: #0284c7;
-            border-radius: 7px;
-            border: 3px solid #020617;
-        }
-        ::-webkit-scrollbar-thumb:hover {
-            background: #38bdf8;
-        }
-        /* Animaciones para los buzos flotantes */
-        @keyframes float-diver {
+        /* Animaciones */
+        @keyframes subtle-float {
             0%, 100% { transform: translateY(0px) rotate(0deg); }
-            50% { transform: translateY(-10px) rotate(2deg); }
+            50% { transform: translateY(-8px) rotate(1deg); }
         }
-        .animate-diver {
-            animation: float-diver 5s ease-in-out infinite;
-        }
-        /* Cartas de memoria giratorias */
-        .memory-card {
-            perspective: 1000px;
-        }
-        .memory-card-inner {
-            transition: transform 0.6s;
-            transform-style: preserve-3d;
-        }
-        .memory-card.flipped .memory-card-inner {
-            transform: rotateY(180deg);
-        }
-        .memory-card-front, .memory-card-back {
-            backface-visibility: hidden;
-        }
-        .memory-card-back {
-            transform: rotateY(180deg);
+        .animate-diver-float {
+            animation: subtle-float 6s ease-in-out infinite;
         }
     </style>
 
-    <!-- FIREBASE INTEGRATION CON SOPORTE COMPLETO DE REGLAS (RULE 1, 2, 3) -->
+    <!-- INTEGRACIÓN CON FIREBASE FIRESTORE CON COMPORTAMIENTO LOCAL INTEGRADO -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-        import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
         import { getFirestore, doc, setDoc, getDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
-        // CONFIGURACIÓN DE FIREBASE (Conectará automáticamente en tu entorno o usará localStorage localmente)
         const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : {
             apiKey: "TU_API_KEY_REAL_AQUI",
             authDomain: "tu-proyecto.firebaseapp.com",
@@ -98,154 +71,145 @@
             appId: "1:000000000000:web:0000000000000000"
         };
 
-        const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
+        const appId = typeof __app_id !== 'undefined' ? __app_id : 'marine-app-id';
         let db = null;
         let auth = null;
         let currentUser = null;
 
-        // Función de inicialización
         async function startFirebase() {
             try {
-                // Si sigue con marcadores por defecto en local, saltar e ir a localStorage
                 if (firebaseConfig.apiKey.includes("TU_API_KEY")) {
-                    console.log("Firebase no configurado aún en local, usando almacenamiento local.");
-                    loadLocalSettings();
+                    console.log("Firebase no configurado, operando en base de datos local.");
+                    loadLocalUsers();
                     return;
                 }
-
                 const app = initializeApp(firebaseConfig);
                 auth = getAuth(app);
                 db = getFirestore(app);
 
-                // REGLA 3: Autenticación previa obligatoria antes de consultar la base de datos
-                if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
-                    await signInWithCustomToken(auth, __initial_auth_token);
-                } else {
-                    await signInAnonymously(auth);
-                }
-
+                await signInAnonymously(auth);
                 onAuthStateChanged(auth, async (user) => {
                     if (user) {
                         currentUser = user;
-                        await loadSettingsFromCloud();
+                        console.log("Sesión anónima de Firebase establecida.");
+                        loadLocalUsers();
                     }
                 });
             } catch (error) {
-                console.warn("Fallo al conectar con Firebase. Cargando datos desde almacenamiento local.", error);
-                loadLocalSettings();
+                console.warn("Fallo en Firebase, usando base de datos local persistente.", error);
+                loadLocalUsers();
             }
         }
 
-        // REGLA 1: Ruta estricta obligatoria para la lectura de configuración pública (6 segmentos)
-        async function loadSettingsFromCloud() {
-            try {
-                const docRef = doc(db, 'artifacts', appId, 'public', 'data', 'appSettings', 'global');
-                const docSnap = await getDoc(docRef);
-                if (docSnap.exists()) {
-                    const data = docSnap.data();
-                    applySettings(data);
-                } else {
-                    loadLocalSettings();
-                }
-            } catch (e) {
-                console.error("Error cargando desde Firestore:", e);
-                loadLocalSettings();
-            }
-        }
-
-        // Guardar configuración aplicando la REGLA 1 (Ruta estricta de 6 segmentos) y REGLA 3 (Guardia de autenticación)
-        window.saveConfigToCloud = async (newData) => {
+        // REGLA 1: Ruta estricta de 6 segmentos para guardar perfiles de usuario individuales
+        window.saveUserProfileToCloud = async (username, userData) => {
             try {
                 if (db && currentUser) {
-                    const docRef = doc(db, 'artifacts', appId, 'public', 'data', 'appSettings', 'global');
-                    await setDoc(docRef, newData);
-                    console.log("Configuración guardada en la nube.");
+                    const docRef = doc(db, 'artifacts', appId, 'public', 'data', 'users', username);
+                    await setDoc(docRef, userData);
                 }
-                // También guardamos localmente por seguridad
-                localStorage.setItem('marine_settings', JSON.stringify(newData));
-                applySettings(newData);
+                // Resguardo en LocalStorage
+                let users = JSON.parse(localStorage.getItem('ocean_users') || '{}');
+                users[username] = userData;
+                localStorage.setItem('ocean_users', JSON.stringify(users));
                 return true;
             } catch (e) {
-                console.error("No se pudo guardar en la nube, guardando localmente:", e);
-                localStorage.setItem('marine_settings', JSON.stringify(newData));
-                applySettings(newData);
-                return false;
+                console.error("No se pudo guardar en la nube, respaldando localmente:", e);
+                let users = JSON.parse(localStorage.getItem('ocean_users') || '{}');
+                users[username] = userData;
+                localStorage.setItem('ocean_users', JSON.stringify(users));
+                return true;
             }
         };
-
-        function loadLocalSettings() {
-            const local = localStorage.getItem('marine_settings');
-            if (local) {
-                applySettings(JSON.parse(local));
-            } else {
-                applySettings({
-                    alumna: "María Antonieta",
-                    cientifico: "Tío Manchas",
-                    pass: "maria2012"
-                });
-            }
-        }
-
-        function applySettings(data) {
-            window.appConfig = data;
-            document.querySelectorAll('.lbl-alumna').forEach(el => el.innerText = data.alumna || "María Antonieta");
-            document.querySelectorAll('.lbl-cientifico').forEach(el => el.innerText = data.cientifico || "Tío Manchas");
-        }
 
         window.onload = () => {
             startFirebase();
             initAmbientSounds();
-            createInitialStars();
         };
     </script>
 </head>
 <body class="min-h-screen text-slate-100 flex flex-col justify-between">
 
-    <!-- PANEL DE BIENVENIDA -->
-    <div id="welcome-screen" class="fixed inset-0 z-50 flex flex-col items-center justify-center bg-gradient-to-b from-slate-900 via-blue-950 to-slate-950 px-4 text-center">
-        <div class="max-w-xl glass-panel p-8 rounded-[30px] border-sky-400/40 relative overflow-hidden">
-            <div class="text-7xl mb-6 animate-bounce">🛥️</div>
-            <h1 class="text-4xl md:text-5xl font-extrabold text-sky-300 mb-2">Comando de Exploración</h1>
-            <p class="text-xl text-blue-200 mb-6 font-fun">¡Bienvenida Alumna <span class="lbl-alumna font-bold text-yellow-300">María Antonieta</span>!</p>
-            <p class="text-sm text-slate-300 leading-relaxed mb-8">
-                Hoy descenderás a las profundidades inexploradas del océano de la mano de tu guía y científico de misión, <span class="lbl-cientifico font-semibold text-sky-400">Tío Manchas</span>. Explora especies reales y supera divertidos retos biológicos.
-            </p>
-            <button onclick="startMission()" class="w-full md:w-auto px-10 py-5 bg-gradient-to-r from-sky-400 to-blue-600 hover:from-sky-300 hover:to-blue-500 text-slate-950 font-black text-2xl rounded-full shadow-[0_0_25px_rgba(56,189,248,0.4)] transition duration-300 transform hover:scale-105 active:scale-95">
-                INICIAR TRANSMISIÓN 📡
-            </button>
+    <!-- PANTALLA HOLOGRÁFICA DE CONTROL DE SESIÓN (LOGIN / REGISTRO) -->
+    <div id="auth-screen" class="fixed inset-0 z-50 flex flex-col items-center justify-center bg-gradient-to-b from-slate-950 via-blue-950 to-slate-900 px-4 text-center">
+        <div class="max-w-md w-full glass-panel p-8 rounded-[30px] border-sky-400/30 relative">
+            <div class="text-6xl mb-4 animate-bounce">📡</div>
+            <h1 class="text-3xl font-extrabold text-sky-400 tracking-wide uppercase font-mono-sci">Estación Táctica</h1>
+            <p class="text-sm text-blue-200 mb-6 font-mono-sci">Sincronización Cuántica de Telemetría</p>
+
+            <!-- FORMULARIO LOGIN / REGISTRO -->
+            <div id="auth-form-box" class="space-y-4 text-left">
+                <div>
+                    <label class="block text-xs font-mono-sci text-sky-300 uppercase mb-1">Nombre de Usuario (ID)</label>
+                    <input type="text" id="auth-username" placeholder="Científico ID" class="w-full p-3 bg-slate-950/80 border border-slate-800 rounded-xl text-white placeholder-slate-700 font-mono-sci focus:outline-none focus:border-sky-400">
+                </div>
+                <div>
+                    <label class="block text-xs font-mono-sci text-sky-300 uppercase mb-1">Código de Seguridad (Clave)</label>
+                    <input type="password" id="auth-password" placeholder="••••••••" class="w-full p-3 bg-slate-950/80 border border-slate-800 rounded-xl text-white placeholder-slate-700 font-mono-sci focus:outline-none focus:border-sky-400">
+                </div>
+
+                <!-- Campos de Registro (Ocultos al inicio) -->
+                <div id="register-fields" class="hidden space-y-4 pt-2 border-t border-slate-800">
+                    <div>
+                        <label class="block text-xs font-mono-sci text-yellow-300 uppercase mb-1">Nombre de la Alumna Científica</label>
+                        <input type="text" id="reg-alumna" placeholder="María Antonieta" class="w-full p-3 bg-slate-950/80 border border-slate-800 rounded-xl text-white placeholder-slate-700 font-mono-sci focus:outline-none focus:border-yellow-400">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-mono-sci text-sky-300 uppercase mb-1">Nombre del Científico Guía</label>
+                        <input type="text" id="reg-cientifico" placeholder="Tío Manchas" class="w-full p-3 bg-slate-950/80 border border-slate-800 rounded-xl text-white placeholder-slate-700 font-mono-sci focus:outline-none focus:border-sky-400">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-mono-sci text-emerald-300 uppercase mb-1">Color de Traje Atmosférico (Hex)</label>
+                        <input type="color" id="reg-color" value="#06b6d4" class="w-full h-12 bg-slate-950/80 border border-slate-800 rounded-xl cursor-pointer">
+                    </div>
+                </div>
+
+                <!-- Botones de Acción -->
+                <div class="pt-4 space-y-2">
+                    <button id="btn-main-auth" onclick="handleAuthAction()" class="w-full py-3 bg-gradient-to-r from-sky-400 to-blue-600 hover:from-sky-300 hover:to-blue-500 text-slate-950 font-black text-lg rounded-xl shadow-lg uppercase transition-all duration-300 transform hover:scale-[1.02]">
+                        Acceder a Cabina
+                    </button>
+                    <button id="btn-toggle-mode" onclick="toggleAuthMode()" class="w-full text-center text-xs text-slate-400 hover:text-sky-300 transition underline font-mono-sci block">
+                        ¿No tienes una terminal? Registra un nuevo perfil
+                    </button>
+                </div>
+            </div>
         </div>
     </div>
 
-    <!-- CABECERA DE CONTROL -->
-    <header class="fixed top-0 left-0 right-0 z-40 bg-slate-950/80 backdrop-blur-md border-b-2 border-sky-500/20 px-4 py-3">
+    <!-- CABECERA DE CONTROL DE MISIÓN -->
+    <header class="fixed top-0 left-0 right-0 z-40 bg-slate-950/90 backdrop-blur-md border-b-2 border-sky-500/20 px-4 py-3">
         <div class="max-w-7xl mx-auto flex flex-wrap items-center justify-between gap-4">
             <div class="flex items-center gap-3">
                 <span class="text-3xl">🎛️</span>
                 <div>
-                    <h1 class="text-lg md:text-xl font-bold text-sky-400 tracking-wider font-mono-sci uppercase">Estación Oceanográfica</h1>
-                    <p class="text-xs text-slate-400 font-mono-sci">Misión de <span class="lbl-alumna text-yellow-300">María Antonieta</span> | Guía: <span class="lbl-cientifico text-sky-300">Tío Manchas</span></p>
+                    <h1 class="text-lg md:text-xl font-bold text-sky-400 tracking-wider font-mono-sci uppercase">Estación de Telemetría</h1>
+                    <p class="text-xs text-slate-400 font-mono-sci">
+                        Operador: <span class="lbl-alumna text-yellow-300">María Antonieta</span> | Mentor: <span class="lbl-cientifico text-sky-300">Tío Manchas</span>
+                    </p>
                 </div>
             </div>
 
-            <!-- Tabs de navegación -->
+            <!-- Menú de pestañas -->
             <div class="flex gap-2">
-                <button onclick="switchTab('explorar')" id="tab-explorar" class="tab-btn px-4 py-2 rounded-lg font-bold bg-sky-500 text-slate-950 transition flex items-center gap-2">
-                    <i class="fa-solid fa-compass"></i> Explorar
+                <button onclick="switchTab('explorar')" id="tab-explorar" class="tab-btn px-4 py-2 rounded-lg font-bold bg-sky-500 text-slate-950 transition flex items-center gap-2 text-sm">
+                    <i class="fa-solid fa-compass"></i> Navegación
                 </button>
-                <button onclick="switchTab('juegos')" id="tab-juegos" class="tab-btn px-4 py-2 rounded-lg font-bold bg-slate-900 text-slate-300 hover:bg-slate-800 transition flex items-center gap-2">
-                    <i class="fa-solid fa-gamepad"></i> Juegos
+                <button onclick="switchTab('juegos')" id="tab-juegos" class="tab-btn px-4 py-2 rounded-lg font-bold bg-slate-900 text-slate-300 hover:bg-slate-800 transition flex items-center gap-2 text-sm">
+                    <i class="fa-solid fa-flask"></i> Laboratorios
                 </button>
-                <button onclick="switchTab('enciclopedia')" id="tab-enciclopedia" class="tab-btn px-4 py-2 rounded-lg font-bold bg-slate-900 text-slate-300 hover:bg-slate-800 transition flex items-center gap-2">
-                    <i class="fa-solid fa-book-open"></i> Especies
+                <button onclick="switchTab('enciclopedia')" id="tab-enciclopedia" class="tab-btn px-4 py-2 rounded-lg font-bold bg-slate-900 text-slate-300 hover:bg-slate-800 transition flex items-center gap-2 text-sm">
+                    <i class="fa-solid fa-dna"></i> Taxonomía
                 </button>
             </div>
 
+            <!-- Controles de Audio y Logout -->
             <div class="flex items-center gap-2">
                 <button onclick="toggleAudio()" class="w-10 h-10 rounded-full bg-slate-900 border border-slate-800 flex items-center justify-center text-sky-400 hover:bg-slate-800 transition">
                     <i id="audio-icon" class="fa-solid fa-volume-high"></i>
                 </button>
-                <button onclick="openAdminModal()" class="px-3 py-2 rounded-lg bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold text-sm transition flex items-center gap-2">
-                    <i class="fa-solid fa-gears"></i> Admin
+                <button onclick="logoutSession()" class="px-3 py-2 rounded-lg bg-rose-600 hover:bg-rose-500 text-white font-bold text-xs transition flex items-center gap-1">
+                    <i class="fa-solid fa-right-from-bracket"></i> Salir
                 </button>
             </div>
         </div>
@@ -254,19 +218,19 @@
     <!-- ÁREA DE CONTENIDO PRINCIPAL -->
     <main class="flex-grow pt-24 pb-8 px-4 max-w-7xl mx-auto w-full relative z-10">
         
-        <!-- PESTAÑA DE EXPLORACIÓN (CON DESPLAZAMIENTO MANUAL) -->
+        <!-- PESTAÑA DE EXPLORACIÓN -->
         <section id="view-explorar" class="tab-view block">
             <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 relative">
                 
-                <!-- HUD de telemetría y buzos (Fijo lateral izquierdo) -->
+                <!-- Panel de Control e Instrumentos Izquierdo -->
                 <div class="lg:col-span-4 lg:sticky lg:top-24 h-fit space-y-6">
                     <div class="glass-panel p-6 rounded-2xl relative overflow-hidden">
-                        <div class="absolute top-2 right-2 px-2 py-0.5 rounded bg-sky-500/20 border border-sky-400/30 text-[10px] font-mono-sci text-sky-300 animate-pulse">TELEMETRÍA</div>
-                        <h2 class="text-xl font-bold text-sky-400 mb-4 font-mono-sci uppercase border-b border-sky-500/20 pb-2">Datos de Cabina</h2>
+                        <div class="absolute top-2 right-2 px-2 py-0.5 rounded bg-sky-500/20 border border-sky-400/30 text-[10px] font-mono-sci text-sky-300 animate-pulse">SISTEMAS</div>
+                        <h2 class="text-xl font-bold text-sky-400 mb-4 font-mono-sci uppercase border-b border-sky-500/20 pb-2">Sensores de Presión</h2>
                         
                         <div class="space-y-4">
                             <div>
-                                <span class="text-xs text-slate-400 font-mono-sci block uppercase">Profundidad</span>
+                                <span class="text-xs text-slate-400 font-mono-sci block uppercase">Profundidad Barométrica</span>
                                 <span class="text-4xl font-black text-yellow-300 font-mono-sci" id="lbl-depth">0</span>
                                 <span class="text-xl text-yellow-300 font-mono-sci">metros</span>
                             </div>
@@ -276,68 +240,66 @@
                                     <span class="text-xl font-bold font-mono-sci text-blue-300" id="lbl-temp">24.5 °C</span>
                                 </div>
                                 <div>
-                                    <span class="text-[10px] text-slate-400 font-mono-sci block uppercase">Presión</span>
+                                    <span class="text-[10px] text-slate-400 font-mono-sci block uppercase">Presión Hidrostática</span>
                                     <span class="text-xl font-bold font-mono-sci text-emerald-400" id="lbl-pressure">1.0 atm</span>
                                 </div>
                             </div>
                         </div>
 
-                        <!-- Mini gráfico de sumergimiento con los Buzos Sincronizados -->
+                        <!-- Indicador del Submarino de los Buzos Sincronizados -->
                         <div class="mt-6 border-t border-slate-800 pt-4 h-64 relative bg-slate-950/40 rounded-xl overflow-hidden border border-slate-900 flex justify-between p-2">
                             <div class="h-full w-1.5 bg-slate-800 rounded-full relative">
                                 <div id="mini-indicator" class="absolute top-0 -left-1 w-3.5 h-3.5 rounded-full bg-yellow-400 shadow-md shadow-yellow-400 transition-all duration-300"></div>
                             </div>
                             
-                            <!-- Visual de los Buzos (María Antonieta y Tío Manchas) -->
-                            <div class="flex-grow flex flex-col justify-center items-center relative animate-diver">
+                            <!-- Visual del buceo interactivo -->
+                            <div class="flex-grow flex flex-col justify-center items-center relative animate-diver-float" id="ocean-diver-indicator">
                                 <div class="text-center">
-                                    <div class="text-4xl">🧑‍🚀</div>
-                                    <span class="text-[10px] font-mono-sci block text-yellow-300">Alumna</span>
+                                    <div class="text-4xl" id="diver-avatar-color" style="filter: drop-shadow(0 0 8px #06b6d4);">🧑‍🚀</div>
+                                    <span class="text-[10px] font-mono-sci block text-yellow-300 lbl-alumna">Alumna</span>
                                 </div>
                                 <div class="w-[2px] h-10 bg-sky-400/50 my-1 border-dashed"></div>
                                 <div class="text-center">
                                     <div class="text-4xl">👨‍🚀</div>
-                                    <span class="text-[10px] font-mono-sci block text-sky-300">Tío Manchas</span>
+                                    <span class="text-[10px] font-mono-sci block text-sky-300 lbl-cientifico">Tío Manchas</span>
                                 </div>
                             </div>
                         </div>
                     </div>
 
-                    <!-- El Walkie-Talkie del Tío Manchas -->
+                    <!-- El Walkie-Talkie Interactivo del Tío Manchas -->
                     <div class="glass-panel-amber p-6 rounded-2xl relative">
                         <div class="absolute top-2 right-2 flex items-center gap-1.5 bg-amber-500/20 border border-amber-400/30 px-2 py-0.5 rounded text-[10px] font-mono-sci text-amber-300">
                             <span class="w-1.5 h-1.5 bg-green-400 rounded-full animate-ping"></span> TRANSMISOR
                         </div>
-                        <h2 class="text-lg font-bold text-amber-400 mb-2 font-mono-sci uppercase">Diálogo de Misión</h2>
-                        <div class="bg-slate-950/70 rounded-xl p-4 min-h-24 border border-amber-500/20 text-slate-200 text-sm leading-relaxed mb-4">
-                            <p id="lbl-dialogue">"¡Hola Alumna <span class="lbl-alumna text-yellow-300">María Antonieta</span>! Utiliza la rueda del mouse o desliza la pantalla hacia abajo para comenzar nuestro descenso. ¡Estoy listo para guiarte!"</p>
+                        <h2 class="text-lg font-bold text-amber-400 mb-2 font-mono-sci uppercase">Transmisión Hidroacústica</h2>
+                        <div class="bg-slate-950/70 rounded-xl p-4 min-h-24 border border-amber-500/20 text-slate-200 text-sm leading-relaxed mb-4 font-fun">
+                            <p id="lbl-dialogue">"¡Hola, <span class="lbl-alumna text-yellow-300">María Antonieta</span>! Utiliza la rueda de tu dispositivo para descender. Estoy listo para calibrar los sensores e identificar la bioquímica celular de las especies."</p>
                         </div>
                         <button onclick="readTioManchasDialogue()" class="w-full py-2 bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold rounded-lg transition flex items-center justify-center gap-2">
-                            <i class="fa-solid fa-volume-high"></i> Escuchar al Tío Manchas
+                            <i class="fa-solid fa-volume-high"></i> Escuchar Instrucciones
                         </button>
                     </div>
                 </div>
 
-                <!-- Columna de Descenso con la fauna (Derecha) -->
+                <!-- Columna de Descenso con la fauna -->
                 <div class="lg:col-span-8 space-y-24 relative" id="descent-column">
-                    
-                    <!-- Marcador de inicio -->
                     <div class="text-center py-8">
                         <div class="text-5xl animate-bounce">🌊</div>
-                        <p class="text-lg font-bold text-sky-300 mt-2">Navegación Táctil: Desplaza hacia abajo</p>
+                        <p class="text-lg font-bold text-sky-300 mt-2 font-mono-sci uppercase">Desplaza hacia abajo para sumergirte</p>
                         <i class="fa-solid fa-chevron-down text-xl text-sky-400 mt-2 animate-pulse"></i>
                     </div>
 
                     <!-- CONTENEDOR DE ESPECIES (Generado dinámicamente) -->
-                    <div id="species-container" class="space-y-16">
-                        <!-- Las 21 especies irán aquí -->
-                    </div>
+                    <div id="species-container" class="space-y-16"></div>
 
-                    <!-- Fin de misión -->
+                    <!-- Límite de misión -->
                     <div class="text-center py-16 border-t-2 border-dashed border-sky-500/20">
                         <div class="text-6xl mb-4">👑🪸</div>
-                        <h2 class="text-3xl font-bold text-yellow-300">¡FONDO ABISAL COMPLETADO!</h2>
-                        <p class="text-sm text-slate-400 mt-2 max-w-md mx-auto">Has alcanzado el límite exploratorio a los 2,200 metros bajo el mar. Utiliza el menú superior para revisar las especies o divertirte en los juegos.</p>
+                        <h2 class="text-3xl font-bold text-yellow-300 font-fun">¡FOSA ABISAL COMPLETADA!</h2>
+                        <p class="text-sm text-slate-400 mt-2 max-w-md mx-auto leading-relaxed">
+                            Has alcanzado el límite técnico de exploración marina a los 2,200 metros de profundidad. Utiliza la consola para estudiar muestras o jugar en los laboratorios biológicos.
+                        </p>
                         <button onclick="window.scrollTo({top: 0, behavior: 'smooth'})" class="mt-6 px-6 py-2 bg-sky-500 hover:bg-sky-400 text-slate-950 font-bold rounded-full transition">Ascender al Inicio</button>
                     </div>
                 </div>
@@ -345,94 +307,54 @@
             </div>
         </section>
 
-        <!-- PESTAÑA DE JUEGOS EDUCATIVOS -->
+        <!-- PESTAÑA DE JUEGOS CIENTÍFICOS (LABORATORIOS) -->
         <section id="view-juegos" class="tab-view hidden space-y-8">
             <div class="text-center max-w-2xl mx-auto">
-                <h2 class="text-3xl font-bold text-sky-300 mb-2">Academia Científica</h2>
-                <p class="text-sm text-slate-400">Pone a prueba tus habilidades de biología y física marina con nuestros desafíos interactivos.</p>
+                <h2 class="text-3xl font-bold text-sky-300 mb-2 font-fun">Estación de Simulación y Análisis</h2>
+                <p class="text-sm text-slate-400">Pone a prueba tus habilidades de termodinámica, bioquímica molecular y física biológica.</p>
             </div>
 
-            <!-- Selector de juegos -->
-            <div class="flex justify-center gap-4 border-b border-slate-800 pb-4">
-                <button onclick="startMemoryGame()" class="px-4 py-2 rounded-lg bg-slate-900 border border-slate-800 hover:bg-slate-800 font-bold transition flex items-center gap-2 text-sm" id="btn-play-memoria">
-                    🧠 Memoria
-                </button>
-                <button onclick="startTriviaGame()" class="px-4 py-2 rounded-lg bg-slate-900 border border-slate-800 hover:bg-slate-800 font-bold transition flex items-center gap-2 text-sm" id="btn-play-trivia">
-                    ❓ Trivia
-                </button>
-                <button onclick="startPuzzleGame()" class="px-4 py-2 rounded-lg bg-slate-900 border border-slate-800 hover:bg-slate-800 font-bold transition flex items-center gap-2 text-sm" id="btn-play-puzzle">
-                    🧩 Rompecabezas
-                </button>
+            <!-- Selector Avanzado de 8 Juegos -->
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-3 border-b border-slate-800 pb-4">
+                <button onclick="startMemoryGame()" class="px-3 py-2 rounded-lg bg-slate-900 border border-slate-800 hover:bg-slate-800 font-mono-sci text-xs transition flex items-center justify-center gap-1" id="btn-play-memoria">🧠 Memoria</button>
+                <button onclick="startTriviaGame()" class="px-3 py-2 rounded-lg bg-slate-900 border border-slate-800 hover:bg-slate-800 font-mono-sci text-xs transition flex items-center justify-center gap-1" id="btn-play-trivia">❓ Trivia</button>
+                <button onclick="startPuzzleGame()" class="px-3 py-2 rounded-lg bg-slate-900 border border-slate-800 hover:bg-slate-800 font-mono-sci text-xs transition flex items-center justify-center gap-1" id="btn-play-puzzle">🧩 Rompecabezas</button>
+                <button onclick="startBuoyancyGame()" class="px-3 py-2 rounded-lg bg-slate-900 border border-slate-800 hover:bg-slate-800 font-mono-sci text-xs transition flex items-center justify-center gap-1" id="btn-play-buoyancy">⚓ Flotabilidad</button>
+                <button onclick="startFoodWebGame()" class="px-3 py-2 rounded-lg bg-slate-900 border border-slate-800 hover:bg-slate-800 font-mono-sci text-xs transition flex items-center justify-center gap-1" id="btn-play-foodweb">🕸️ Red Trófica</button>
+                <button onclick="startChemosynthesisGame()" class="px-3 py-2 rounded-lg bg-slate-900 border border-slate-800 hover:bg-slate-800 font-mono-sci text-xs transition flex items-center justify-center gap-1" id="btn-play-chemo">🧪 Quimiosíntesis</button>
+                <button onclick="startSonarGame()" class="px-3 py-2 rounded-lg bg-slate-900 border border-slate-800 hover:bg-slate-800 font-mono-sci text-xs transition flex items-center justify-center gap-1" id="btn-play-sonar">📡 Sonar Acústico</button>
+                <button onclick="startCryptoGame()" class="px-3 py-2 rounded-lg bg-slate-900 border border-slate-800 hover:bg-slate-800 font-mono-sci text-xs transition flex items-center justify-center gap-1" id="btn-play-crypto">🔑 Criptograma</button>
             </div>
 
-            <!-- Contenedores de juego -->
-            <div id="game-arena" class="max-w-4xl mx-auto glass-panel p-6 rounded-3xl min-h-[400px] flex items-center justify-center relative">
-                <p class="text-slate-400 italic">Selecciona un juego arriba para desplegar el simulador...</p>
+            <!-- Arena interactiva de ejecución -->
+            <div id="game-arena" class="max-w-4xl mx-auto glass-panel p-6 rounded-3xl min-h-[480px] flex items-center justify-center relative">
+                <p class="text-slate-400 italic font-mono-sci">Selecciona una consola táctica de simulación para iniciar...</p>
             </div>
         </section>
 
-        <!-- PESTAÑA DE ENCICLOPEDIA / ESPECIES -->
+        <!-- PESTAÑA DE ENCICLOPEDIA TAXONÓMICA -->
         <section id="view-enciclopedia" class="tab-view hidden space-y-6">
             <div class="text-center max-w-2xl mx-auto">
-                <h2 class="text-3xl font-bold text-sky-300 mb-2">Bitácora Biológica</h2>
-                <p class="text-sm text-slate-400">Inspecciona las fichas técnicas completas de cada uno de los 21 especímenes registrados.</p>
+                <h2 class="text-3xl font-bold text-sky-300 mb-2 font-fun">Bitácora Taxonómica Avanzada</h2>
+                <p class="text-sm text-slate-400">Inspecciona los expedientes bioquímicos y de filogenia para cada uno de los 21 especímenes registrados.</p>
             </div>
 
-            <!-- Grid de enciclopedia -->
-            <div id="encyclopedia-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                <!-- Se poblará con JS -->
-            </div>
+            <!-- Grid -->
+            <div id="encyclopedia-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"></div>
         </section>
 
     </main>
 
     <!-- PIE DE PÁGINA -->
-    <footer class="border-t border-slate-900 bg-slate-950 py-6 text-center text-xs text-slate-500 relative z-10">
+    <footer class="border-t border-slate-900 bg-slate-950 py-6 text-center text-xs text-slate-500 relative z-10 font-mono-sci">
         <div class="max-w-7xl mx-auto px-4 flex flex-col md:flex-row justify-between items-center gap-4">
-            <p>© 2026 Academia de Ciencias Marinas. Desarrollado de manera exclusiva para María Antonieta.</p>
-            <p>Imágenes locales desde la carpeta <code>./images/</code> | Audio sintetizado.</p>
+            <p>© 2026 Estación Oceanográfica Táctica. Interfaz optimizada para Alumnas Científicas.</p>
+            <p>Ecosistema de Imágenes Locales habilitado en subcarpeta <code>./images/</code></p>
         </div>
     </footer>
 
-    <!-- MODAL ADMINISTRADOR -->
-    <div id="admin-modal" class="hidden fixed inset-0 z-50 bg-slate-950/90 backdrop-blur-md flex items-center justify-center p-4">
-        <div class="glass-panel p-8 rounded-3xl w-full max-w-md relative border-amber-500/30">
-            <button onclick="closeAdminModal()" class="absolute top-4 right-4 text-slate-400 hover:text-white text-lg">✕</button>
-            <h2 class="text-2xl font-bold text-amber-400 mb-4 font-mono-sci uppercase"><i class="fa-solid fa-screwdriver-wrench"></i> Consola Administrativa</h2>
-            
-            <div class="space-y-4">
-                <div>
-                    <label class="block text-xs font-mono-sci text-slate-400 uppercase mb-1">Clave de Acceso</label>
-                    <input type="password" id="input-admin-pass" placeholder="Clave de seguridad" class="w-full p-3 bg-slate-950 border border-slate-800 rounded-lg text-white placeholder-slate-600 focus:outline-none focus:border-amber-400 font-mono-sci">
-                </div>
-                
-                <div class="border-t border-slate-800 pt-4 hidden" id="admin-fields">
-                    <div class="space-y-4">
-                        <div>
-                            <label class="block text-xs font-mono-sci text-slate-400 uppercase mb-1">Nombre Alumna</label>
-                            <input type="text" id="input-alumna" class="w-full p-3 bg-slate-950 border border-slate-800 rounded-lg text-white">
-                        </div>
-                        <div>
-                            <label class="block text-xs font-mono-sci text-slate-400 uppercase mb-1">Nombre del Científico Guía</label>
-                            <input type="text" id="input-cientifico" class="w-full p-3 bg-slate-950 border border-slate-800 rounded-lg text-white">
-                        </div>
-                        <div>
-                            <label class="block text-xs font-mono-sci text-slate-400 uppercase mb-1">Nueva Clave de Administrador</label>
-                            <input type="text" id="input-new-pass" class="w-full p-3 bg-slate-950 border border-slate-800 rounded-lg text-white placeholder-slate-600" placeholder="Deja en blanco para no cambiar">
-                        </div>
-                    </div>
-                </div>
 
-                <div class="pt-4 flex gap-2">
-                    <button id="btn-admin-verify" onclick="verifyAdmin()" class="flex-grow py-3 bg-amber-500 hover:bg-amber-400 text-slate-950 font-black rounded-lg transition uppercase">Verificar Clave</button>
-                    <button id="btn-admin-save" onclick="saveAdminSettings()" class="flex-grow py-3 bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black rounded-lg transition uppercase hidden">Guardar Cambios</button>
-                </div>
-            </div>
-        </div>
-    </div>
-
-
-    <!-- DATOS DE ESPECIES Y LÓGICA DE JUEGOS -->
+    <!-- DATOS Y LÓGICA GENERAL -->
     <script>
         // DATA DE LAS 21 ESPECIES MARINAS (NOMBRES BILINGÜES)
         const especiesData = [
@@ -459,7 +381,83 @@
             { id: "tubeworms", nameEs: "Gusanos de Tubo", nameEn: "Giant Tube Worms", depth: 2200, zone: "abisal", trivia: "Viven en temperaturas extremas gracias a bacterias quimiosintéticas en sus tejidos.", adaptation: "Quimiosíntesis simbiótica", food: "Compuestos sulfurosos" }
         ];
 
-        // CONFIGURACIÓN DE AUDIO SINTETIZADO (Web Audio API)
+        let activeUser = null;
+        let isRegisterMode = false;
+        let localUsers = {};
+
+        // --- SISTEMA MULTI-USUARIO ---
+        function loadLocalUsers() {
+            localUsers = JSON.parse(localStorage.getItem('ocean_users') || '{}');
+        }
+
+        function toggleAuthMode() {
+            isRegisterMode = !isRegisterMode;
+            const regFields = document.getElementById('register-fields');
+            const mainBtn = document.getElementById('btn-main-auth');
+            const toggleBtn = document.getElementById('btn-toggle-mode');
+
+            if (isRegisterMode) {
+                regFields.classList.remove('hidden');
+                mainBtn.innerText = "Registrar y Acceder";
+                toggleBtn.innerText = "Regresar al Acceso de Cabina";
+            } else {
+                regFields.classList.add('hidden');
+                mainBtn.innerText = "Acceder a Cabina";
+                toggleBtn.innerText = "¿No tienes una terminal? Registra un nuevo perfil";
+            }
+        }
+
+        async function handleAuthAction() {
+            const username = document.getElementById('auth-username').value.trim().toLowerCase();
+            const pass = document.getElementById('auth-password').value;
+
+            if (!username || !pass) {
+                alert("Completa tus credenciales cuánticas.");
+                return;
+            }
+
+            if (isRegisterMode) {
+                const alumna = document.getElementById('reg-alumna').value.trim();
+                const cientifico = document.getElementById('reg-cientifico').value.trim();
+                const color = document.getElementById('reg-color').value;
+
+                if (!alumna || !cientifico) {
+                    alert("Por favor completa los nombres de la tripulación.");
+                    return;
+                }
+
+                const newUserData = { username, pass, alumna, cientifico, color };
+                await window.saveUserProfileToCloud(username, newUserData);
+                loadLocalUsers();
+                activeUser = newUserData;
+                loginSuccess();
+            } else {
+                // Modo Login
+                if (localUsers[username] && localUsers[username].pass === pass) {
+                    activeUser = localUsers[username];
+                    loginSuccess();
+                } else {
+                    alert("Código de terminal no válido o credenciales erróneas.");
+                }
+            }
+        }
+
+        function loginSuccess() {
+            document.getElementById('auth-screen').classList.add('hidden');
+            document.querySelectorAll('.lbl-alumna').forEach(el => el.innerText = activeUser.alumna);
+            document.querySelectorAll('.lbl-cientifico').forEach(el => el.innerText = activeUser.cientifico);
+            document.getElementById('diver-avatar-color').style.color = activeUser.color;
+            renderDescentSpecies();
+        }
+
+        function logoutSession() {
+            activeUser = null;
+            document.getElementById('auth-screen').classList.remove('hidden');
+            document.getElementById('auth-username').value = "";
+            document.getElementById('auth-password').value = "";
+        }
+
+        // --- SISTEMA DE AUDIO (Web Audio API) ---
         let audioCtx = null;
         let ambientSoundOn = false;
         let bubbleInterval = null;
@@ -467,9 +465,7 @@
         function initAmbientSounds() {
             try {
                 audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-            } catch (e) {
-                console.warn("Navegador no soporta Web Audio.");
-            }
+            } catch (e) {}
         }
 
         function toggleAudio() {
@@ -481,7 +477,7 @@
                     audioCtx.resume();
                 }
                 playBubbleSound();
-                bubbleInterval = setInterval(playBubbleSound, 4000);
+                bubbleInterval = setInterval(playBubbleSound, 3500);
             } else {
                 icon.className = "fa-solid fa-volume-xmark text-slate-500";
                 clearInterval(bubbleInterval);
@@ -494,80 +490,64 @@
                 const osc = audioCtx.createOscillator();
                 const gain = audioCtx.createGain();
                 osc.type = 'sine';
-                const f = 150 + Math.random() * 200;
+                const f = 200 + Math.random() * 150;
                 osc.frequency.setValueAtTime(f, audioCtx.currentTime);
-                osc.frequency.exponentialRampToValueAtTime(f * 2.5, audioCtx.currentTime + 0.3);
-                gain.gain.setValueAtTime(0.04, audioCtx.currentTime);
-                gain.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime + 0.3);
+                osc.frequency.exponentialRampToValueAtTime(f * 2, audioCtx.currentTime + 0.4);
+                gain.gain.setValueAtTime(0.03, audioCtx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime + 0.4);
                 osc.connect(gain);
                 gain.connect(audioCtx.destination);
                 osc.start();
-                osc.stop(audioCtx.currentTime + 0.35);
+                osc.stop(audioCtx.currentTime + 0.45);
             } catch(e){}
         }
 
-        // TEXT TO SPEECH (TÍO MANCHAS LECTURA DE DIÁLOGO)
         function readTioManchasDialogue() {
             try {
-                if (!('speechSynthesis' in window)) {
-                    alert("Tu navegador no soporta síntesis de voz.");
-                    return;
-                }
+                if (!('speechSynthesis' in window)) return;
                 window.speechSynthesis.cancel();
                 const text = document.getElementById('lbl-dialogue').innerText;
                 const utterance = new SpeechSynthesisUtterance(text);
-                
-                // Configurar voz masculina del Tío Manchas
                 const voices = window.speechSynthesis.getVoices();
-                const maleVoice = voices.find(v => v.lang.startsWith('es') && (v.name.includes('Julio') || v.name.includes('Miguel') || v.name.includes('Jorge') || v.name.includes('Diego') || v.name.includes('Male')));
-                if (maleVoice) {
-                    utterance.voice = maleVoice;
-                } else {
-                    utterance.pitch = 0.8; // Bajar tono para forzar masculina
-                }
-                utterance.rate = 0.9;
+                const maleVoice = voices.find(v => v.lang.startsWith('es') && (v.name.includes('Julio') || v.name.includes('Miguel') || v.name.includes('Jorge') || v.name.includes('Diego')));
+                if (maleVoice) utterance.voice = maleVoice;
+                utterance.pitch = 0.85;
+                utterance.rate = 0.95;
                 window.speechSynthesis.speak(utterance);
-            } catch (e) {
-                console.warn("Fallo al reproducir audio de voz.");
-            }
+            } catch (e) {}
         }
 
-        // CONTROL DE NAVEGACIÓN Y TABS
+        // --- CONTROL DE NAVEGACIÓN Y TABS ---
         function switchTab(tabId) {
             document.querySelectorAll('.tab-view').forEach(view => view.classList.add('hidden'));
             document.querySelectorAll('.tab-btn').forEach(btn => {
-                btn.className = "tab-btn px-4 py-2 rounded-lg font-bold bg-slate-900 text-slate-300 hover:bg-slate-800 transition flex items-center gap-2";
+                btn.className = "tab-btn px-4 py-2 rounded-lg font-bold bg-slate-900 text-slate-300 hover:bg-slate-800 transition flex items-center gap-2 text-sm";
             });
 
             document.getElementById(`view-${tabId}`).classList.remove('hidden');
             const targetBtn = document.getElementById(`tab-${tabId}`);
-            targetBtn.className = "tab-btn px-4 py-2 rounded-lg font-bold bg-sky-500 text-slate-950 transition flex items-center gap-2";
+            targetBtn.className = "tab-btn px-4 py-2 rounded-lg font-bold bg-sky-500 text-slate-950 transition flex items-center gap-2 text-sm";
             
-            if (tabId === 'enciclopedia') {
-                renderEncyclopedia();
-            }
+            if (tabId === 'enciclopedia') renderEncyclopedia();
         }
 
         function startMission() {
             document.getElementById('welcome-screen').classList.add('hidden');
-            // Inicializar render de especies en la pestaña exploración
-            renderDescentSpecies();
         }
 
-        // MONITOREO DE DESCENTE (SCROLL)
+        // SCROLL
         window.addEventListener('scroll', () => {
             const currentTab = document.getElementById('view-explorar').classList.contains('hidden');
-            if (currentTab) return; // Sólo calcular si está en Exploración
+            if (currentTab || !activeUser) return;
 
             const scrollTop = window.scrollY;
             const docHeight = document.documentElement.scrollHeight - window.innerHeight;
             if (docHeight <= 0) return;
             const scrollRatio = Math.min(Math.max(scrollTop / docHeight, 0), 1);
 
-            // Mapeo físico
             const depth = Math.round(scrollRatio * 2200);
-            const temp = (25.0 - (scrollRatio * 23.2)).toFixed(1); // De 25C a 1.8C
-            const pressure = (1.0 + (depth / 10.0)).toFixed(1); // 1 atm cada 10 metros
+            const temp = (25.0 - (scrollRatio * 23.2)).toFixed(1);
+            const pressure = (1.0 + (depth / 10.0)).toFixed(1);
 
             document.getElementById('lbl-depth').innerText = depth.toLocaleString();
             document.getElementById('lbl-temp').innerText = `${temp} °C`;
@@ -593,27 +573,23 @@
                 b = Math.round(42 + (8 - 42) * f);
             }
             document.body.style.backgroundColor = `rgb(${r}, ${g}, ${b})`;
-
-            // Diálogos automatizados según profundidad
             updateDialogueOnScroll(depth);
         });
 
-        // DIÁLOGOS DE TRANSMISIÓN DE TÍO MANCHAS
-        let lastZone = "";
         function updateDialogueOnScroll(depth) {
             let zone = "";
             let text = "";
-            const cientifico = window.appConfig?.cientifico || "Tío Manchas";
+            const cientifico = activeUser?.cientifico || "Tío Manchas";
 
             if (depth < 200) {
                 zone = "sol";
-                text = `"${cientifico} reportando: Estamos en la Zona de Luz. Aquí habita la mayor parte de la fotosíntesis y vida brillante. ¡Fíjate cómo nadan las tortugas y se esconde el pez payaso!"`;
+                text = `"${cientifico} reportando: Estamos en la Zona Epipelágica (Luz). El sol sustenta la red fotosintética. Observa la Posidonia y las adaptaciones de la tortuga verde."`;
             } else if (depth >= 200 && depth < 1000) {
                 zone = "crepusculo";
-                text = `"${cientifico} por radio: La luz solar se desvanece... entramos en la penumbra. Mira el Celacanto y al magnífico Tiburón Blanco rastreando señales eléctricas. ¡Asegura los sensores!"`;
+                text = `"${cientifico} por radio: Cruzamos la Zona Mesopelágica. La presión sube y la luz disminuye. Aquí, los órganos fotosensibles de los celacantos operan al límite."`;
             } else {
                 zone = "abisal";
-                text = `"${cientifico} informando: Presión extrema superada. Estamos en el Abismo Absoluto. Las criaturas aquí brillan por sí mismas para cazar y hablar. ¡Es maravilloso!"`;
+                text = `"${cientifico} reportando: Zona Batipelágica extrema. Sin fotosíntesis. La energía depende de la quimiosíntesis de las fuentes hidrotermales. ¡Increíble!"`;
             }
 
             if (zone !== lastZone) {
@@ -622,7 +598,7 @@
             }
         }
 
-        // GENERACIÓN DINÁMICA DE ESPECIES EN LA COLUMNA DE DESCENSO
+        // RENDER ESPECIES
         function renderDescentSpecies() {
             const container = document.getElementById('species-container');
             container.innerHTML = "";
@@ -639,9 +615,9 @@
                         <div class="w-full md:w-1/2 space-y-3">
                             <div class="flex items-baseline gap-2">
                                 <h3 class="text-2xl font-black text-sky-300">${e.nameEs}</h3>
-                                <span class="text-xs text-slate-400 italic">${e.nameEn}</span>
+                                <span class="text-xs text-slate-400 italic font-mono-sci">${e.nameEn}</span>
                             </div>
-                            <p class="text-sm text-slate-300 leading-relaxed">${e.trivia}</p>
+                            <p class="text-sm text-slate-300 leading-relaxed font-fun">${e.trivia}</p>
                             <div class="grid grid-cols-2 gap-2 text-xs border-t border-slate-800 pt-3 font-mono-sci">
                                 <div><span class="text-slate-500 uppercase block">Adaptación</span><span class="text-emerald-400 font-bold">${e.adaptation}</span></div>
                                 <div><span class="text-slate-500 uppercase block">Alimentación</span><span class="text-yellow-400 font-bold">${e.food}</span></div>
@@ -652,7 +628,6 @@
             });
         }
 
-        // GENERACIÓN DE ENCICLOPEDIA COMPLETA
         function renderEncyclopedia() {
             const grid = document.getElementById('encyclopedia-grid');
             grid.innerHTML = "";
@@ -670,53 +645,37 @@
                                 <span class="text-[10px] text-yellow-300 font-mono-sci bg-yellow-500/10 px-2 py-0.5 rounded">${e.depth}m</span>
                             </div>
                             <p class="text-xs text-slate-400 font-mono-sci italic">Scientific: ${e.nameEn}</p>
-                            <p class="text-xs text-slate-300 leading-normal border-t border-slate-900 pt-2">${e.trivia}</p>
+                            <p class="text-xs text-slate-300 leading-normal border-t border-slate-900 pt-2 font-fun">${e.trivia}</p>
                         </div>
                     </div>
                 `;
             });
         }
 
-        // --- SISTEMA DE JUEGOS EDUCATIVOS ---
 
-        // 1. JUEGO DE MEMORIA (MEMORY MATCH)
-        let memoryCards = [];
-        let flippedCards = [];
-        let matchedPairs = 0;
+        // --- LA SUITE DE JUEGOS EDUCATIVOS CIENTÍFICOS ---
 
+        // 1. MEMORIA
+        let memoryFlipped = [];
+        let memoryMatchedCount = 0;
         function startMemoryGame() {
             highlightGameTab('btn-play-memoria');
             const arena = document.getElementById('game-arena');
             arena.innerHTML = `
                 <div class="w-full max-w-2xl space-y-4">
-                    <div class="flex justify-between items-center mb-2">
-                        <h3 class="text-xl font-bold text-sky-400">Juego de Memoria Marina</h3>
-                        <button onclick="setupMemoryGrid()" class="px-4 py-1.5 bg-sky-500 text-slate-950 rounded-lg font-bold text-xs hover:bg-sky-400 transition">Reiniciar</button>
-                    </div>
+                    <h3 class="text-xl font-bold text-sky-400 font-fun">Laboratorio de Memoria Taxonómica</h3>
                     <div class="grid grid-cols-4 gap-4" id="memory-grid"></div>
                 </div>
             `;
-            setupMemoryGrid();
-        }
-
-        function setupMemoryGrid() {
-            // Seleccionamos 6 especies para 12 cartas
             const selected = especiesData.slice(0, 6);
-            const doubled = [...selected, ...selected];
-            // Barajar
-            doubled.sort(() => Math.random() - 0.5);
-
-            flippedCards = [];
-            matchedPairs = 0;
-
+            const doubled = [...selected, ...selected].sort(() => Math.random() - 0.5);
             const grid = document.getElementById('memory-grid');
             grid.innerHTML = "";
-
             doubled.forEach((item, index) => {
                 grid.innerHTML += `
-                    <div onclick="flipCard(this, ${index}, '${item.id}')" class="memory-card h-28 cursor-pointer rounded-xl bg-slate-900 border border-sky-400/30 relative" data-card-id="${item.id}">
-                        <div class="memory-card-inner w-full h-full relative duration-500">
-                            <div class="memory-card-front absolute inset-0 bg-slate-950 flex items-center justify-center rounded-xl text-3xl">❓</div>
+                    <div onclick="flipMemoryCard(this, ${index}, '${item.id}')" class="memory-card h-24 cursor-pointer rounded-xl bg-slate-900 border border-sky-400/30 relative">
+                        <div class="memory-card-inner w-full h-full relative duration-300">
+                            <div class="memory-card-front absolute inset-0 bg-slate-950 flex items-center justify-center rounded-xl text-2xl font-mono-sci">?</div>
                             <div class="memory-card-back absolute inset-0 rounded-xl overflow-hidden hidden bg-slate-900">
                                 <img src="./images/${item.id}.jpg" class="w-full h-full object-cover" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex'">
                                 <div class="hidden items-center justify-center h-full text-2xl">🌊</div>
@@ -725,224 +684,366 @@
                     </div>
                 `;
             });
+            memoryFlipped = [];
+            memoryMatchedCount = 0;
         }
 
-        function flipCard(el, index, id) {
-            if (flippedCards.length >= 2 || el.classList.contains('flipped') || el.classList.contains('matched')) return;
-
+        function flipMemoryCard(el, idx, id) {
+            if (memoryFlipped.length >= 2 || el.classList.contains('flipped') || el.classList.contains('matched')) return;
             el.classList.add('flipped');
             el.querySelector('.memory-card-back').classList.remove('hidden');
-            flippedCards.push({ element: el, id: id });
-
+            memoryFlipped.push({ el, id });
             playBubbleSound();
-
-            if (flippedCards.length === 2) {
-                setTimeout(checkMemoryMatch, 1000);
-            }
-        }
-
-        function checkMemoryMatch() {
-            const [card1, card2] = flippedCards;
-            if (card1.id === card2.id) {
-                card1.element.classList.add('matched');
-                card2.element.classList.add('matched');
-                matchedPairs++;
-                if (matchedPairs === 6) {
-                    alert("¡Felicidades María Antonieta! Has encontrado todas las parejas de memoria.");
-                }
-            } else {
-                card1.element.classList.remove('flipped');
-                card2.element.classList.remove('flipped');
+            if (memoryFlipped.length === 2) {
                 setTimeout(() => {
-                    card1.element.querySelector('.memory-card-back').classList.add('hidden');
-                    card2.element.querySelector('.memory-card-back').classList.add('hidden');
-                }, 500);
+                    const [c1, c2] = memoryFlipped;
+                    if (c1.id === c2.id) {
+                        c1.el.classList.add('matched');
+                        c2.el.classList.add('matched');
+                        memoryMatchedCount++;
+                        if (memoryMatchedCount === 6) alert("¡Excelente análisis biológico de memoria!");
+                    } else {
+                        c1.el.classList.remove('flipped');
+                        c2.el.classList.remove('flipped');
+                        c1.el.querySelector('.memory-card-back').classList.add('hidden');
+                        c2.el.querySelector('.memory-card-back').classList.add('hidden');
+                    }
+                    memoryFlipped = [];
+                }, 1000);
             }
-            flippedCards = [];
         }
 
-        // 2. JUEGO DE TRIVIA (QUIZ)
-        const triviaQuestions = [
-            { q: "¿Qué gas respiran los buzos que transportan en sus tanques?", a: ["Oxígeno", "Helio puro", "Hidrógeno"], c: 0 },
-            { q: "¿En qué zona de profundidad vive el Pez Linterna?", a: ["Zona de Luz", "Zona Penumbra", "Zona Abisal"], c: 1 },
-            { q: "La Posidonia Oceánica no es un alga, sino una...", a: ["Planta terrestre adaptada", "Coral blando", "Alga gigante"], c: 0 },
-            { q: "¿Cuántos corazones tiene el pulpo?", a: ["Uno", "Dos", "Tres"], c: 2 },
-            { q: "¿Por qué el Pez Ojo de Barril tiene la cabeza transparente?", a: ["Para asustar", "Para mirar hacia arriba en busca de presas", "Para enfriar su cerebro"], c: 1 }
+        // 2. TRIVIA AVANZADA
+        const triviaAdvQuestions = [
+            { q: "¿Cómo se calcula la presión hidrostática de forma simplificada por cada 10 metros?", a: ["1 atm de aumento constante", "0.5 atm", "Aumento exponencial según salinidad"], c: 0 },
+            { q: "¿Cuál es la adaptación química para sobrevivir en las fuentes hidrotermales?", a: ["Quimiosíntesis simbiótica de compuestos de azufre", "Mitocondrias gigantes", "Producción de hemoglobina ácida"], c: 0 },
+            { q: "¿Por qué los celacantos se consideran fósiles vivientes?", a: ["Su morfología ha permanecido sin cambios por 400 millones de años", "Tienen escamas de piedra", "Soportan temperaturas superiores a 90C"], c: 0 }
         ];
-        let currentQuestionIdx = 0;
-
+        let currentAdvTriviaIdx = 0;
         function startTriviaGame() {
             highlightGameTab('btn-play-trivia');
-            currentQuestionIdx = 0;
-            showTriviaQuestion();
+            currentAdvTriviaIdx = 0;
+            renderTriviaAdv();
         }
-
-        function showTriviaQuestion() {
-            const question = triviaQuestions[currentQuestionIdx];
+        function renderTriviaAdv() {
+            const question = triviaAdvQuestions[currentAdvTriviaIdx];
             const arena = document.getElementById('game-arena');
             arena.innerHTML = `
                 <div class="w-full max-w-lg space-y-6">
-                    <h3 class="text-xl font-bold text-sky-400">Trivia del Abismo (${currentQuestionIdx + 1}/5)</h3>
-                    <p class="text-lg font-semibold text-slate-200">${question.q}</p>
+                    <h3 class="text-xl font-bold text-sky-400 font-fun">Análisis Oceanográfico Táctico (${currentAdvTriviaIdx + 1}/3)</h3>
+                    <p class="text-lg font-semibold font-mono-sci text-slate-200">${question.q}</p>
                     <div class="flex flex-col gap-3">
                         ${question.a.map((option, idx) => `
-                            <button onclick="checkTriviaAnswer(${idx})" class="w-full py-3 px-4 bg-slate-900 border border-slate-800 hover:border-sky-400 rounded-xl font-medium text-left text-sm transition duration-200 hover:bg-slate-800">${option}</button>
+                            <button onclick="checkTriviaAdv(${idx})" class="w-full py-3 px-4 bg-slate-900 border border-slate-800 hover:border-sky-400 rounded-xl text-left text-sm transition hover:bg-slate-800 font-fun">${option}</button>
                         `).join('')}
                     </div>
                 </div>
             `;
         }
-
-        function checkTriviaAnswer(idx) {
-            const question = triviaQuestions[currentQuestionIdx];
-            if (idx === question.c) {
-                alert("¡Correcto! Excelente deducción científica.");
+        function checkTriviaAdv(idx) {
+            if (idx === triviaAdvQuestions[currentAdvTriviaIdx].c) {
+                alert("Calibración correcta del sensor biológico.");
                 playBubbleSound();
             } else {
-                alert("Incorrecto. ¡Sigue investigando la bitácora de especies!");
+                alert("Error de telemetría.");
             }
-            currentQuestionIdx++;
-            if (currentQuestionIdx < triviaQuestions.length) {
-                showTriviaQuestion();
-            } else {
-                alert("¡Has terminado la trivia del Abismo!");
-                startTriviaGame();
-            }
+            currentAdvTriviaIdx++;
+            if (currentAdvTriviaIdx < triviaAdvQuestions.length) renderTriviaAdv();
+            else alert("Análisis finalizado.");
         }
 
-        // 3. ROMPECABEZAS DESLIZANTE (PUZZLE)
-        let puzzleGrid = [0, 1, 2, 3, 4, 5, 6, 7, 8];
-
+        // 3. ROMPECABEZAS DESLIZANTE DE IMÁGENES DE ESPECIES
+        let pGrid = [0, 1, 2, 3, 4, 5, 6, 7, 8];
+        let currentPuzzleSpecies = "octopus";
         function startPuzzleGame() {
             highlightGameTab('btn-play-puzzle');
             const arena = document.getElementById('game-arena');
             arena.innerHTML = `
                 <div class="w-full max-w-sm space-y-4">
                     <div class="flex justify-between items-center mb-2">
-                        <h3 class="text-xl font-bold text-sky-400">Rompecabezas Numérico Marina</h3>
-                        <button onclick="shufflePuzzle()" class="px-4 py-1.5 bg-sky-500 text-slate-950 rounded-lg font-bold text-xs hover:bg-sky-400 transition">Barajar</button>
+                        <h3 class="text-xl font-bold text-sky-400 font-fun">Rompecabezas de Especies</h3>
+                        <select onchange="changePuzzleSpecies(this.value)" class="bg-slate-950 p-1.5 border border-slate-800 rounded font-mono-sci text-xs">
+                            <option value="octopus">Pulpo Común</option>
+                            <option value="turtle">Tortuga Verde</option>
+                            <option value="clownfish">Pez Payaso</option>
+                            <option value="lionfish">Pez León</option>
+                        </select>
                     </div>
-                    <div class="grid grid-cols-3 gap-2" id="puzzle-grid"></div>
+                    <div class="grid grid-cols-3 gap-1" id="puzzle-grid" style="width: 300px; height: 300px;"></div>
                 </div>
             `;
-            shufflePuzzle();
+            shufflePuzzleImage();
         }
-
-        function renderPuzzle() {
+        function changePuzzleSpecies(val) {
+            currentPuzzleSpecies = val;
+            shufflePuzzleImage();
+        }
+        function renderPuzzleImage() {
             const grid = document.getElementById('puzzle-grid');
             grid.innerHTML = "";
-            puzzleGrid.forEach((tile, index) => {
+            pGrid.forEach((tile, index) => {
                 if (tile === 8) {
-                    // El tile 8 es el espacio vacío
-                    grid.innerHTML += `<div class="h-24 bg-slate-950 rounded-lg"></div>`;
+                    grid.innerHTML += `<div class="bg-slate-950 rounded-md border border-slate-900"></div>`;
                 } else {
+                    const row = Math.floor(tile / 3);
+                    const col = tile % 3;
+                    const xPos = col * 50; // Mapeo de background offset
+                    const yPos = row * 50;
                     grid.innerHTML += `
-                        <button onclick="movePuzzleTile(${index})" class="h-24 bg-gradient-to-br from-sky-600 to-blue-800 rounded-lg font-mono-sci font-bold text-2xl border border-sky-400 flex items-center justify-center active:scale-95 transition-transform">
-                            ${tile + 1}
+                        <button onclick="movePuzzleImageTile(${index})" 
+                                class="puzzle-tile h-24 rounded-md border border-sky-500/20 active:scale-95 transition-all"
+                                style="background-image: url('./images/${currentPuzzleSpecies}.jpg'); background-position: ${xPos}% ${yPos}%; background-size: 300% 300%;">
                         </button>
                     `;
                 }
             });
         }
-
-        function shufflePuzzle() {
-            puzzleGrid.sort(() => Math.random() - 0.5);
-            renderPuzzle();
+        function shufflePuzzleImage() {
+            pGrid.sort(() => Math.random() - 0.5);
+            renderPuzzleImage();
+        }
+        function movePuzzleImageTile(index) {
+            const emptyIndex = pGrid.indexOf(8);
+            const validMoves = {
+                0: [1, 3], 1: [0, 2, 4], 2: [1, 5],
+                3: [0, 4, 6], 4: [1, 3, 5, 7], 5: [2, 4, 8],
+                6: [3, 7], 7: [4, 6, 8], 8: [5, 7]
+            };
+            if (validMoves[index].includes(emptyIndex)) {
+                const temp = pGrid[index];
+                pGrid[index] = pGrid[emptyIndex];
+                pGrid[emptyIndex] = temp;
+                playBubbleSound();
+                renderPuzzleImage();
+                if (pGrid.every((val, i) => val === i)) {
+                    alert("¡Especie reconstruida con éxito de imagen!");
+                }
+            }
         }
 
-        function movePuzzleTile(index) {
-            // Verificar celdas adyacentes al tile vacío (valor 8)
-            const emptyIndex = puzzleGrid.indexOf(8);
-            const validMoves = {
-                0: [1, 3],
-                1: [0, 2, 4],
-                2: [1, 5],
-                3: [0, 4, 6],
-                4: [1, 3, 5, 7],
-                5: [2, 4, 8],
-                6: [3, 7],
-                7: [4, 6, 8],
-                8: [5, 7]
-            };
+        // 4. SIMULADOR DE FLOTABILIDAD (FÍSICA DE FLUIDOS)
+        let subMass = 1000;
+        let subVolume = 950;
+        const targetDensity = 1.025; // Densidad del agua salada g/cm³
+        function startBuoyancyGame() {
+            highlightGameTab('btn-play-buoyancy');
+            subMass = 1000;
+            subVolume = 950;
+            renderBuoyancyLab();
+        }
+        function renderBuoyancyLab() {
+            const currentDensity = (subMass / subVolume).toFixed(3);
+            let stateMessage = "";
+            let colorClass = "";
+            if (currentDensity > targetDensity) {
+                stateMessage = "🚨 Hundiéndose: Densidad del Submarino > Densidad del Agua Salada";
+                colorClass = "text-rose-400";
+            } else if (currentDensity < targetDensity) {
+                stateMessage = "🎈 Ascendiendo: Densidad del Submarino < Densidad del Agua Salada";
+                colorClass = "text-yellow-400";
+            } else {
+                stateMessage = "✅ Flotabilidad Neutra Perfecta (Equilibrio de fuerzas)";
+                colorClass = "text-emerald-400";
+            }
 
-            if (validMoves[index].includes(emptyIndex)) {
-                // Intercambio de posiciones
-                const temp = puzzleGrid[index];
-                puzzleGrid[index] = puzzleGrid[emptyIndex];
-                puzzleGrid[emptyIndex] = temp;
-                playBubbleSound();
-                renderPuzzle();
+            const arena = document.getElementById('game-arena');
+            arena.innerHTML = `
+                <div class="w-full max-w-lg space-y-6">
+                    <h3 class="text-xl font-bold text-sky-400 font-fun">Laboratorio de Flotabilidad Neutra</h3>
+                    <p class="text-sm text-slate-300 font-fun">El objetivo es equilibrar la densidad del submarino con la del agua salada (<span class="text-emerald-400">1.025 g/cm³</span>) modificando el agua de lastre (Masa).</p>
+                    
+                    <div class="bg-slate-950 p-4 rounded-xl border border-slate-800 space-y-3 font-mono-sci">
+                        <div>Masa actual (Agua de lastre): <span class="text-sky-300">${subMass} kg</span></div>
+                        <div>Volumen fijo del Submarino: <span class="text-sky-300">${subVolume} m³</span></div>
+                        <div class="text-lg">Densidad ($\rho$ = m/V): <span class="${colorClass}">${currentDensity} g/cm³</span></div>
+                    </div>
 
-                // Verificar si se completó (orden 0-8)
-                if (puzzleGrid.every((val, i) => val === i)) {
-                    alert("¡Espectacular! Has ordenado el rompecabezas táctico.");
-                }
+                    <p class="text-sm font-bold ${colorClass}">${stateMessage}</p>
+
+                    <div class="flex gap-4">
+                        <button onclick="adjustMass(-10)" class="flex-1 py-2 bg-rose-600 rounded-lg text-white font-bold">- Eliminar Lastre</button>
+                        <button onclick="adjustMass(10)" class="flex-1 py-2 bg-emerald-600 rounded-lg text-white font-bold">+ Agregar Lastre</button>
+                    </div>
+                </div>
+            `;
+        }
+        function adjustMass(amt) {
+            subMass += amt;
+            playBubbleSound();
+            renderBuoyancyLab();
+        }
+
+        // 5. RED TRÓFICA MARINA
+        let trophicGrid = ["", "", "", ""];
+        function startFoodWebGame() {
+            highlightGameTab('btn-play-foodweb');
+            trophicGrid = ["", "", "", ""];
+            renderTrophicWeb();
+        }
+        function renderTrophicWeb() {
+            const arena = document.getElementById('game-arena');
+            arena.innerHTML = `
+                <div class="w-full max-w-lg space-y-6">
+                    <h3 class="text-xl font-bold text-sky-400 font-fun">Equilibrio de la Red Trófica</h3>
+                    <p class="text-sm text-slate-300 font-fun">Arrastra u ordena la jerarquía de energía de abajo hacia arriba (Nivel 1 al 4).</p>
+                    
+                    <div class="space-y-3 font-mono-sci">
+                        <div onclick="placeTrophic(3)" class="p-3 bg-slate-950 border border-slate-800 rounded-xl flex justify-between cursor-pointer">
+                            <span>Nivel 4: Depredador Ápice</span>
+                            <span class="text-yellow-400 font-bold">${trophicGrid[3] || "Selecciona..."}</span>
+                        </div>
+                        <div onclick="placeTrophic(2)" class="p-3 bg-slate-950 border border-slate-800 rounded-xl flex justify-between cursor-pointer">
+                            <span>Nivel 3: Consumidor Secundario</span>
+                            <span class="text-yellow-400 font-bold">${trophicGrid[2] || "Selecciona..."}</span>
+                        </div>
+                        <div onclick="placeTrophic(1)" class="p-3 bg-slate-950 border border-slate-800 rounded-xl flex justify-between cursor-pointer">
+                            <span>Nivel 2: Consumidor Primario</span>
+                            <span class="text-yellow-400 font-bold">${trophicGrid[1] || "Selecciona..."}</span>
+                        </div>
+                        <div onclick="placeTrophic(0)" class="p-3 bg-slate-950 border border-slate-800 rounded-xl flex justify-between cursor-pointer">
+                            <span>Nivel 1: Productor</span>
+                            <span class="text-yellow-400 font-bold">${trophicGrid[0] || "Selecciona..."}</span>
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-4 gap-2">
+                        <button onclick="selectTrophic('Tiburón Blanco')" class="p-2 bg-slate-900 border border-slate-800 text-xs rounded hover:border-sky-400 font-fun">Tiburón Blanco</button>
+                        <button onclick="selectTrophic('Pez Payaso')" class="p-2 bg-slate-900 border border-slate-800 text-xs rounded hover:border-sky-400 font-fun">Pez Payaso</button>
+                        <button onclick="selectTrophic('Morena')" class="p-2 bg-slate-900 border border-slate-800 text-xs rounded hover:border-sky-400 font-fun">Morena</button>
+                        <button onclick="selectTrophic('Posidonia')" class="p-2 bg-slate-900 border border-slate-800 text-xs rounded hover:border-sky-400 font-fun">Posidonia</button>
+                    </div>
+
+                    <button onclick="verifyTrophic()" class="w-full py-2 bg-sky-500 hover:bg-sky-400 text-slate-950 font-black rounded-lg transition uppercase font-mono-sci">Verificar Red</button>
+                </div>
+            `;
+        }
+        let selectedTrophicItem = "";
+        function selectTrophic(item) {
+            selectedTrophicItem = item;
+            playBubbleSound();
+        }
+        function placeTrophic(idx) {
+            if (!selectedTrophicItem) return;
+            trophicGrid[idx] = selectedTrophicItem;
+            selectedTrophicItem = "";
+            renderTrophicWeb();
+        }
+        function verifyTrophic() {
+            if (trophicGrid[0] === "Posidonia" && trophicGrid[1] === "Pez Payaso" && trophicGrid[2] === "Morena" && trophicGrid[3] === "Tiburón Blanco") {
+                alert("¡Red trófica equilibrada perfectamente!");
+            } else {
+                alert("Desequilibrio en la red de transferencia de energía. Inténtalo de nuevo.");
+            }
+        }
+
+        // 6. REACTOR DE QUIMIOSÍNTESIS
+        let chemFormula = [];
+        function startChemosynthesisGame() {
+            highlightGameTab('btn-play-chemo');
+            chemFormula = [];
+            renderChemoLab();
+        }
+        function renderChemoLab() {
+            const arena = document.getElementById('game-arena');
+            arena.innerHTML = `
+                <div class="w-full max-w-lg space-y-6">
+                    <h3 class="text-xl font-bold text-sky-400 font-fun">Reactor de Quimiosíntesis</h3>
+                    <p class="text-sm text-slate-300 font-fun">Selecciona las moléculas correctas de las chimeneas para generar glucosa y energía celular en ausencia de luz.</p>
+                    
+                    <div class="p-4 bg-slate-950 rounded-xl border border-slate-800 text-center text-xl font-mono-sci">
+                        ${chemFormula.join(" + ") || "Reactor Vacío"}
+                    </div>
+
+                    <div class="grid grid-cols-4 gap-2">
+                        <button onclick="addChem('CO₂')" class="p-2 bg-slate-900 border border-slate-800 rounded font-mono-sci text-xs hover:border-sky-400">CO₂</button>
+                        <button onclick="addChem('H₂O')" class="p-2 bg-slate-900 border border-slate-800 rounded font-mono-sci text-xs hover:border-sky-400">H₂O</button>
+                        <button onclick="addChem('H₂S')" class="p-2 bg-slate-900 border border-slate-800 rounded font-mono-sci text-xs hover:border-sky-400">H₂S</button>
+                        <button onclick="addChem('O₂')" class="p-2 bg-slate-900 border border-slate-800 rounded font-mono-sci text-xs hover:border-sky-400">O₂</button>
+                    </div>
+
+                    <div class="flex gap-2">
+                        <button onclick="verifyChemo()" class="flex-grow py-2 bg-emerald-600 text-white font-bold rounded-lg font-mono-sci uppercase">Iniciar Reacción</button>
+                        <button onclick="startChemosynthesisGame()" class="py-2 px-4 bg-rose-600 text-white font-bold rounded-lg font-mono-sci">Clear</button>
+                    </div>
+                </div>
+            `;
+        }
+        function addChem(item) {
+            chemFormula.push(item);
+            playBubbleSound();
+            renderChemoLab();
+        }
+        function verifyChemo() {
+            if (chemFormula.includes("CO₂") && chemFormula.includes("H₂O") && chemFormula.includes("H₂S") && chemFormula.includes("O₂")) {
+                alert("¡Fórmula cuántica quimiotrófica de glucosa balanceada!");
+            } else {
+                alert("Reacción inestable. Faltan componentes moleculares básicos.");
+            }
+        }
+
+        // 7. RECONOCIMIENTO POR ECOLOCALIZACIÓN
+        let sonarFreq = 400;
+        const targetFreq = 520; // Frecuencia del canto del cetáceo
+        function startSonarGame() {
+            highlightGameTab('btn-play-sonar');
+            sonarFreq = 400;
+            renderSonarLab();
+        }
+        function renderSonarLab() {
+            const diff = Math.abs(sonarFreq - targetFreq);
+            let matchText = "";
+            if (diff < 15) matchText = "🎯 Sincronización Acústica Completa: Canto de Ballena Azul identificado";
+            else matchText = "Señal ruidosa. Ajusta el canal hidrófono...";
+
+            const arena = document.getElementById('game-arena');
+            arena.innerHTML = `
+                <div class="w-full max-w-lg space-y-6">
+                    <h3 class="text-xl font-bold text-sky-400 font-fun">Ecolocalización Acústica</h3>
+                    <p class="text-sm text-slate-300 font-fun">Sintoniza la frecuencia de eco del hidrófono con la señal biológica objetivo (520 Hz).</p>
+                    
+                    <div class="bg-slate-950 p-4 rounded-xl border border-slate-800 font-mono-sci space-y-2">
+                        <div>Frecuencia Hidrófono: <span class="text-yellow-400 font-bold">${sonarFreq} Hz</span></div>
+                        <input type="range" min="300" max="700" value="${sonarFreq}" oninput="updateSonarFreq(this.value)" class="w-full mt-2">
+                    </div>
+
+                    <p class="text-sm font-bold font-mono-sci text-sky-300 animate-pulse">${matchText}</p>
+                </div>
+            `;
+        }
+        function updateSonarFreq(val) {
+            sonarFreq = parseInt(val);
+            renderSonarLab();
+        }
+
+        // 8. CRIPTOGRAMA TAXONÓMICO
+        function startCryptoGame() {
+            highlightGameTab('btn-play-crypto');
+            const arena = document.getElementById('game-arena');
+            arena.innerHTML = `
+                <div class="w-full max-w-lg space-y-6">
+                    <h3 class="text-xl font-bold text-sky-400 font-fun">Criptograma Taxonómico</h3>
+                    <p class="text-sm text-slate-300 font-fun">Descifra el nombre científico codificado en anagramas de la especie más inteligente de los mares: <span class="text-yellow-300 block font-mono-sci text-lg mt-2">P O M U L O O C N C U M</span></p>
+                    
+                    <input type="text" id="crypto-ans" placeholder="Introduce el nombre de la especie descifrada" class="w-full p-3 bg-slate-950 border border-slate-800 rounded-xl text-white font-mono-sci focus:outline-none focus:border-sky-400">
+
+                    <button onclick="verifyCrypto()" class="w-full py-2 bg-sky-500 text-slate-950 font-black rounded-lg transition uppercase font-mono-sci">Decodificar</button>
+                </div>
+            `;
+        }
+        function verifyCrypto() {
+            const ans = document.getElementById('crypto-ans').value.trim().toLowerCase();
+            if (ans === "pulpo comun" || ans === "pulpo común") {
+                alert("¡Fórmula decodificada! Especie identificada.");
+            } else {
+                alert("Nombre erróneo. El criptograma de aminoácidos falló.");
             }
         }
 
         function highlightGameTab(btnId) {
             document.querySelectorAll('#view-juegos button').forEach(btn => {
-                btn.className = "px-4 py-2 rounded-lg bg-slate-900 border border-slate-800 hover:bg-slate-800 font-bold transition flex items-center gap-2 text-sm";
+                btn.className = "px-3 py-2 rounded-lg bg-slate-900 border border-slate-800 hover:bg-slate-800 font-mono-sci text-xs transition flex items-center justify-center gap-1";
             });
-            document.getElementById(btnId).className = "px-4 py-2 rounded-lg bg-sky-500 text-slate-950 font-bold transition flex items-center gap-2 text-sm";
-        }
-
-
-        // --- PANEL DE ADMINISTRACIÓN ---
-
-        function openAdminModal() {
-            document.getElementById('admin-modal').classList.remove('hidden');
-            document.getElementById('input-admin-pass').value = "";
-            document.getElementById('admin-fields').classList.add('hidden');
-            document.getElementById('btn-admin-save').classList.add('hidden');
-            document.getElementById('btn-admin-verify').classList.remove('hidden');
-        }
-
-        function closeAdminModal() {
-            document.getElementById('admin-modal').classList.add('hidden');
-        }
-
-        function verifyAdmin() {
-            const pass = document.getElementById('input-admin-pass').value;
-            const currentPass = window.appConfig?.pass || "maria2012";
-
-            if (pass === currentPass) {
-                document.getElementById('admin-fields').classList.remove('hidden');
-                document.getElementById('btn-admin-save').classList.remove('hidden');
-                document.getElementById('btn-admin-verify').classList.add('hidden');
-                
-                // Cargar valores actuales en inputs
-                document.getElementById('input-alumna').value = window.appConfig?.alumna || "María Antonieta";
-                document.getElementById('input-cientifico').value = window.appConfig?.cientifico || "Tío Manchas";
-                document.getElementById('input-new-pass').value = "";
-            } else {
-                alert("Clave administrativa incorrecta.");
-            }
-        }
-
-        async function saveAdminSettings() {
-            const nuevaAlumna = document.getElementById('input-alumna').value;
-            const nuevoCientifico = document.getElementById('input-cientifico').value;
-            const nuevaClave = document.getElementById('input-new-pass').value;
-
-            const updatedData = {
-                alumna: nuevaAlumna || "María Antonieta",
-                cientifico: nuevoCientifico || "Tío Manchas",
-                pass: nuevaClave || window.appConfig?.pass || "maria2012"
-            };
-
-            const success = await window.saveConfigToCloud(updatedData);
-            if (success) {
-                alert("Configuración sincronizada.");
-            } else {
-                alert("Configuración guardada en almacenamiento local.");
-            }
-            closeAdminModal();
-        }
-
-        function createInitialStars() {
-            // Estructura estética
-            console.log("Comando táctico listo para la exploración.");
+            document.getElementById(btnId).className = "px-3 py-2 rounded-lg bg-sky-500 text-slate-950 font-bold font-mono-sci text-xs transition flex items-center justify-center gap-1";
         }
     </script>
 </body>
