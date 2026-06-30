@@ -91,7 +91,7 @@
                 onAuthStateChanged(auth, async (user) => {
                     if (user) {
                         currentUser = user;
-                        console.log("Sesión anónima de Firebase establecida.");
+                        console.log("Sesión anónima de Firebase establecida de forma segura.");
                         loadLocalUsers();
                     }
                 });
@@ -108,7 +108,7 @@
                     const docRef = doc(db, 'artifacts', appId, 'public', 'data', 'users', username);
                     await setDoc(docRef, userData);
                 }
-                // Resguardo en LocalStorage
+                // Resguardo instantáneo en LocalStorage
                 let users = JSON.parse(localStorage.getItem('ocean_users') || '{}');
                 users[username] = userData;
                 localStorage.setItem('ocean_users', JSON.stringify(users));
@@ -122,6 +122,23 @@
             }
         };
 
+        // Función para consultar perfiles prioritariamente en la nube con caída a local
+        window.getUserProfileFromCloud = async (username) => {
+            try {
+                if (db && currentUser) {
+                    const docRef = doc(db, 'artifacts', appId, 'public', 'data', 'users', username);
+                    const docSnap = await getDoc(docRef);
+                    if (docSnap.exists()) {
+                        return docSnap.data();
+                    }
+                }
+                return null;
+            } catch (e) {
+                console.error("Error al buscar en Firestore, recurriendo a memoria local.", e);
+                return null;
+            }
+        };
+
         window.onload = () => {
             startFirebase();
             initAmbientSounds();
@@ -130,8 +147,14 @@
 </head>
 <body class="min-h-screen text-slate-100 flex flex-col justify-between">
 
+    <!-- CONTENEDOR DE TOASTS TÁCTICOS -->
+    <div id="system-toast-container" class="fixed top-6 right-6 z-50 flex flex-col gap-3 pointer-events-none max-w-sm w-full"></div>
+
     <!-- PANTALLA HOLOGRÁFICA DE CONTROL DE SESIÓN (LOGIN / REGISTRO) -->
     <div id="auth-screen" class="fixed inset-0 z-50 flex flex-col items-center justify-center bg-gradient-to-b from-slate-950 via-blue-950 to-slate-900 px-4 text-center">
+        <!-- Partículas marinas de fondo en cabina -->
+        <div class="absolute inset-0 bg-[radial-gradient(ellipse_at_center,rgba(56,189,248,0.07)_0%,transparent_70%)] pointer-events-none"></div>
+        
         <div class="max-w-md w-full glass-panel p-8 rounded-[30px] border-sky-400/30 relative">
             <div class="text-6xl mb-4 animate-bounce">📡</div>
             <h1 class="text-3xl font-extrabold text-sky-400 tracking-wide uppercase font-mono-sci">Estación Táctica</h1>
@@ -159,7 +182,7 @@
                         <input type="text" id="reg-cientifico" placeholder="Tío Manchas" class="w-full p-3 bg-slate-950/80 border border-slate-800 rounded-xl text-white placeholder-slate-700 font-mono-sci focus:outline-none focus:border-sky-400">
                     </div>
                     <div>
-                        <label class="block text-xs font-mono-sci text-emerald-300 uppercase mb-1">Color de Traje Atmosférico (Hex)</label>
+                        <label class="block text-xs font-mono-sci text-emerald-300 uppercase mb-1">Color de Traje Atmosférico</label>
                         <input type="color" id="reg-color" value="#06b6d4" class="w-full h-12 bg-slate-950/80 border border-slate-800 rounded-xl cursor-pointer">
                     </div>
                 </div>
@@ -191,7 +214,7 @@
             </div>
 
             <!-- Menú de pestañas -->
-            <div class="flex gap-2">
+            <div class="flex gap-2 font-mono-sci">
                 <button onclick="switchTab('explorar')" id="tab-explorar" class="tab-btn px-4 py-2 rounded-lg font-bold bg-sky-500 text-slate-950 transition flex items-center gap-2 text-sm">
                     <i class="fa-solid fa-compass"></i> Navegación
                 </button>
@@ -208,7 +231,7 @@
                 <button onclick="toggleAudio()" class="w-10 h-10 rounded-full bg-slate-900 border border-slate-800 flex items-center justify-center text-sky-400 hover:bg-slate-800 transition">
                     <i id="audio-icon" class="fa-solid fa-volume-high"></i>
                 </button>
-                <button onclick="logoutSession()" class="px-3 py-2 rounded-lg bg-rose-600 hover:bg-rose-500 text-white font-bold text-xs transition flex items-center gap-1">
+                <button onclick="logoutSession()" class="px-3 py-2 rounded-lg bg-rose-600 hover:bg-rose-500 text-white font-bold text-xs transition flex items-center gap-1 font-mono-sci uppercase">
                     <i class="fa-solid fa-right-from-bracket"></i> Salir
                 </button>
             </div>
@@ -256,12 +279,12 @@
                             <div class="flex-grow flex flex-col justify-center items-center relative animate-diver-float" id="ocean-diver-indicator">
                                 <div class="text-center">
                                     <div class="text-4xl" id="diver-avatar-color" style="filter: drop-shadow(0 0 8px #06b6d4);">🧑‍🚀</div>
-                                    <span class="text-[10px] font-mono-sci block text-yellow-300 lbl-alumna">Alumna</span>
+                                    <span class="text-[10px] font-mono-sci block text-yellow-300 lbl-alumna font-bold">Alumna</span>
                                 </div>
                                 <div class="w-[2px] h-10 bg-sky-400/50 my-1 border-dashed"></div>
                                 <div class="text-center">
                                     <div class="text-4xl">👨‍🚀</div>
-                                    <span class="text-[10px] font-mono-sci block text-sky-300 lbl-cientifico">Tío Manchas</span>
+                                    <span class="text-[10px] font-mono-sci block text-sky-300 lbl-cientifico font-bold">Tío Manchas</span>
                                 </div>
                             </div>
                         </div>
@@ -273,11 +296,11 @@
                             <span class="w-1.5 h-1.5 bg-green-400 rounded-full animate-ping"></span> TRANSMISOR
                         </div>
                         <h2 class="text-lg font-bold text-amber-400 mb-2 font-mono-sci uppercase">Transmisión Hidroacústica</h2>
-                        <div class="bg-slate-950/70 rounded-xl p-4 min-h-24 border border-amber-500/20 text-slate-200 text-sm leading-relaxed mb-4 font-fun">
-                            <p id="lbl-dialogue">"¡Hola, <span class="lbl-alumna text-yellow-300">María Antonieta</span>! Utiliza la rueda de tu dispositivo para descender. Estoy listo para calibrar los sensores e identificar la bioquímica celular de las especies."</p>
+                        <div class="bg-slate-950/70 rounded-xl p-4 min-h-24 border border-amber-500/20 text-slate-200 text-sm leading-relaxed mb-4">
+                            <p id="lbl-dialogue">"¡Hola, <span class="lbl-alumna text-yellow-300 font-bold">María Antonieta</span>! Utiliza la rueda de tu dispositivo para descender. Estoy listo para calibrar los sensores e identificar la bioquímica celular de las especies."</p>
                         </div>
-                        <button onclick="readTioManchasDialogue()" class="w-full py-2 bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold rounded-lg transition flex items-center justify-center gap-2">
-                            <i class="fa-solid fa-volume-high"></i> Escuchar Instrucciones
+                        <button onclick="readTioManchasDialogue()" class="w-full py-2 bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold rounded-lg transition flex items-center justify-center gap-2 font-mono-sci uppercase">
+                            <i class="fa-solid fa-volume-high animate-bounce"></i> Escuchar Instrucciones
                         </button>
                     </div>
                 </div>
@@ -296,11 +319,11 @@
                     <!-- Límite de misión -->
                     <div class="text-center py-16 border-t-2 border-dashed border-sky-500/20">
                         <div class="text-6xl mb-4">👑🪸</div>
-                        <h2 class="text-3xl font-bold text-yellow-300 font-fun">¡FOSA ABISAL COMPLETADA!</h2>
+                        <h2 class="text-3xl font-bold text-yellow-300">¡FOSA ABISAL COMPLETADA!</h2>
                         <p class="text-sm text-slate-400 mt-2 max-w-md mx-auto leading-relaxed">
                             Has alcanzado el límite técnico de exploración marina a los 2,200 metros de profundidad. Utiliza la consola para estudiar muestras o jugar en los laboratorios biológicos.
                         </p>
-                        <button onclick="window.scrollTo({top: 0, behavior: 'smooth'})" class="mt-6 px-6 py-2 bg-sky-500 hover:bg-sky-400 text-slate-950 font-bold rounded-full transition">Ascender al Inicio</button>
+                        <button onclick="window.scrollTo({top: 0, behavior: 'smooth'})" class="mt-6 px-6 py-2 bg-sky-500 hover:bg-sky-400 text-slate-950 font-bold rounded-full transition font-mono-sci uppercase">Ascender al Inicio</button>
                     </div>
                 </div>
 
@@ -310,36 +333,36 @@
         <!-- PESTAÑA DE JUEGOS CIENTÍFICOS (LABORATORIOS) -->
         <section id="view-juegos" class="tab-view hidden space-y-8">
             <div class="text-center max-w-2xl mx-auto">
-                <h2 class="text-3xl font-bold text-sky-300 mb-2 font-fun">Estación de Simulación y Análisis</h2>
+                <h2 class="text-3xl font-bold text-sky-300 mb-2">Estación de Simulación y Análisis</h2>
                 <p class="text-sm text-slate-400">Pone a prueba tus habilidades de termodinámica, bioquímica molecular y física biológica.</p>
             </div>
 
             <!-- Selector Avanzado de 8 Juegos -->
-            <div class="grid grid-cols-2 md:grid-cols-4 gap-3 border-b border-slate-800 pb-4">
-                <button onclick="startMemoryGame()" class="px-3 py-2 rounded-lg bg-slate-900 border border-slate-800 hover:bg-slate-800 font-mono-sci text-xs transition flex items-center justify-center gap-1" id="btn-play-memoria">🧠 Memoria</button>
-                <button onclick="startTriviaGame()" class="px-3 py-2 rounded-lg bg-slate-900 border border-slate-800 hover:bg-slate-800 font-mono-sci text-xs transition flex items-center justify-center gap-1" id="btn-play-trivia">❓ Trivia</button>
-                <button onclick="startPuzzleGame()" class="px-3 py-2 rounded-lg bg-slate-900 border border-slate-800 hover:bg-slate-800 font-mono-sci text-xs transition flex items-center justify-center gap-1" id="btn-play-puzzle">🧩 Rompecabezas</button>
-                <button onclick="startBuoyancyGame()" class="px-3 py-2 rounded-lg bg-slate-900 border border-slate-800 hover:bg-slate-800 font-mono-sci text-xs transition flex items-center justify-center gap-1" id="btn-play-buoyancy">⚓ Flotabilidad</button>
-                <button onclick="startFoodWebGame()" class="px-3 py-2 rounded-lg bg-slate-900 border border-slate-800 hover:bg-slate-800 font-mono-sci text-xs transition flex items-center justify-center gap-1" id="btn-play-foodweb">🕸️ Red Trófica</button>
-                <button onclick="startChemosynthesisGame()" class="px-3 py-2 rounded-lg bg-slate-900 border border-slate-800 hover:bg-slate-800 font-mono-sci text-xs transition flex items-center justify-center gap-1" id="btn-play-chemo">🧪 Quimiosíntesis</button>
-                <button onclick="startSonarGame()" class="px-3 py-2 rounded-lg bg-slate-900 border border-slate-800 hover:bg-slate-800 font-mono-sci text-xs transition flex items-center justify-center gap-1" id="btn-play-sonar">📡 Sonar Acústico</button>
-                <button onclick="startCryptoGame()" class="px-3 py-2 rounded-lg bg-slate-900 border border-slate-800 hover:bg-slate-800 font-mono-sci text-xs transition flex items-center justify-center gap-1" id="btn-play-crypto">🔑 Criptograma</button>
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-3 border-b border-slate-800 pb-4 font-mono-sci">
+                <button onclick="startMemoryGame()" class="px-3 py-2 rounded-lg bg-slate-900 border border-slate-800 hover:bg-slate-800 text-xs transition flex items-center justify-center gap-1" id="btn-play-memoria">🧠 Memoria</button>
+                <button onclick="startTriviaGame()" class="px-3 py-2 rounded-lg bg-slate-900 border border-slate-800 hover:bg-slate-800 text-xs transition flex items-center justify-center gap-1" id="btn-play-trivia">❓ Trivia</button>
+                <button onclick="startPuzzleGame()" class="px-3 py-2 rounded-lg bg-slate-900 border border-slate-800 hover:bg-slate-800 text-xs transition flex items-center justify-center gap-1" id="btn-play-puzzle">🧩 Rompecabezas</button>
+                <button onclick="startBuoyancyGame()" class="px-3 py-2 rounded-lg bg-slate-900 border border-slate-800 hover:bg-slate-800 text-xs transition flex items-center justify-center gap-1" id="btn-play-buoyancy">⚓ Flotabilidad</button>
+                <button onclick="startFoodWebGame()" class="px-3 py-2 rounded-lg bg-slate-900 border border-slate-800 hover:bg-slate-800 text-xs transition flex items-center justify-center gap-1" id="btn-play-foodweb">🕸️ Red Trófica</button>
+                <button onclick="startChemosynthesisGame()" class="px-3 py-2 rounded-lg bg-slate-900 border border-slate-800 hover:bg-slate-800 text-xs transition flex items-center justify-center gap-1" id="btn-play-chemo">🧪 Quimiosíntesis</button>
+                <button onclick="startSonarGame()" class="px-3 py-2 rounded-lg bg-slate-900 border border-slate-800 hover:bg-slate-800 text-xs transition flex items-center justify-center gap-1" id="btn-play-sonar">📡 Sonar Acústico</button>
+                <button onclick="startCryptoGame()" class="px-3 py-2 rounded-lg bg-slate-900 border border-slate-800 hover:bg-slate-800 text-xs transition flex items-center justify-center gap-1" id="btn-play-crypto">🔑 Criptograma</button>
             </div>
 
             <!-- Arena interactiva de ejecución -->
             <div id="game-arena" class="max-w-4xl mx-auto glass-panel p-6 rounded-3xl min-h-[480px] flex items-center justify-center relative">
-                <p class="text-slate-400 italic font-mono-sci">Selecciona una consola táctica de simulación para iniciar...</p>
+                <p class="text-slate-400 italic font-mono-sci">Selecciona una consola de simulación para iniciar el análisis táctico...</p>
             </div>
         </section>
 
         <!-- PESTAÑA DE ENCICLOPEDIA TAXONÓMICA -->
         <section id="view-enciclopedia" class="tab-view hidden space-y-6">
             <div class="text-center max-w-2xl mx-auto">
-                <h2 class="text-3xl font-bold text-sky-300 mb-2 font-fun">Bitácora Taxonómica Avanzada</h2>
+                <h2 class="text-3xl font-bold text-sky-300 mb-2">Bitácora Taxonómica Avanzada</h2>
                 <p class="text-sm text-slate-400">Inspecciona los expedientes bioquímicos y de filogenia para cada uno de los 21 especímenes registrados.</p>
             </div>
 
-            <!-- Grid -->
+            <!-- Grid de enciclopedia -->
             <div id="encyclopedia-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"></div>
         </section>
 
@@ -348,7 +371,7 @@
     <!-- PIE DE PÁGINA -->
     <footer class="border-t border-slate-900 bg-slate-950 py-6 text-center text-xs text-slate-500 relative z-10 font-mono-sci">
         <div class="max-w-7xl mx-auto px-4 flex flex-col md:flex-row justify-between items-center gap-4">
-            <p>© 2026 Estación Oceanográfica Táctica. Interfaz optimizada para Alumnas Científicas.</p>
+            <p>© 2026 Estación Oceanográfica Táctica. Interfaz optimizada para Alumnas Científicas Avanzadas.</p>
             <p>Ecosistema de Imágenes Locales habilitado en subcarpeta <code>./images/</code></p>
         </div>
     </footer>
@@ -356,7 +379,6 @@
 
     <!-- DATOS Y LÓGICA GENERAL -->
     <script>
-        // DATA DE LAS 21 ESPECIES MARINAS (NOMBRES BILINGÜES)
         const especiesData = [
             { id: "starfish", nameEs: "Estrella de Mar", nameEn: "Starfish", depth: 10, zone: "sol", trivia: "Las estrellas de mar no tienen sangre; utilizan agua de mar filtrada para mover sus patitas de tubo.", adaptation: "Sistema hidrovascular", food: "Moluscos pequeños" },
             { id: "posidonia", nameEs: "Posidonia Oceánica", nameEn: "Neptune Grass", depth: 25, zone: "sol", trivia: "¡No es un alga! Es una planta terrestre adaptada al mar que produce oxígeno para el planeta.", adaptation: "Fotosíntesis acuática", food: "Sustratos de luz" },
@@ -384,6 +406,46 @@
         let activeUser = null;
         let isRegisterMode = false;
         let localUsers = {};
+        let lastZone = "";
+
+        // --- SISTEMA DE TOASTS TÁCTICOS (REEMPLAZO DE ALERT) ---
+        function showSystemMessage(title, text, type = "info") {
+            const container = document.getElementById('system-toast-container');
+            const toast = document.createElement('div');
+            toast.className = `glass-panel p-4 rounded-2xl border-l-4 pointer-events-auto transform translate-x-12 opacity-0 transition-all duration-300 flex flex-col gap-1 shadow-2xl`;
+            
+            if (type === "error") {
+                toast.classList.add('border-l-rose-500');
+            } else if (type === "warning") {
+                toast.classList.add('border-l-yellow-500');
+            } else if (type === "success") {
+                toast.classList.add('border-l-emerald-500');
+            } else {
+                toast.classList.add('border-l-sky-500');
+            }
+
+            toast.innerHTML = `
+                <div class="flex justify-between items-center gap-2">
+                    <span class="font-bold text-xs tracking-wide uppercase font-mono-sci ${type === 'error' ? 'text-rose-400' : type === 'warning' ? 'text-yellow-400' : type === 'success' ? 'text-emerald-400' : 'text-sky-400'}">${title}</span>
+                    <button onclick="this.parentElement.parentElement.remove()" class="text-xs text-slate-400 hover:text-white">✕</button>
+                </div>
+                <p class="text-xs text-slate-300 leading-relaxed font-fun">${text}</p>
+            `;
+
+            container.appendChild(toast);
+            
+            setTimeout(() => {
+                toast.classList.remove('translate-x-12', 'opacity-0');
+            }, 10);
+
+            setTimeout(() => {
+                toast.classList.add('translate-x-12', 'opacity-0');
+                setTimeout(() => toast.remove(), 300);
+            }, 5000);
+
+            // Sonido de alerta táctica discreta
+            playBubbleSound();
+        }
 
         // --- SISTEMA MULTI-USUARIO ---
         function loadLocalUsers() {
@@ -407,12 +469,13 @@
             }
         }
 
+        // LÓGICA DE REGISTRO E INICIO DE SESIÓN INTEGRADO (NUBE Y LOCAL)
         async function handleAuthAction() {
             const username = document.getElementById('auth-username').value.trim().toLowerCase();
             const pass = document.getElementById('auth-password').value;
 
             if (!username || !pass) {
-                alert("Completa tus credenciales cuánticas.");
+                showSystemMessage("Advertencia de Seguridad", "Por favor completa tus credenciales cuánticas.", "warning");
                 return;
             }
 
@@ -422,7 +485,23 @@
                 const color = document.getElementById('reg-color').value;
 
                 if (!alumna || !cientifico) {
-                    alert("Por favor completa los nombres de la tripulación.");
+                    showSystemMessage("Error de Perfil", "Por favor completa los nombres de la tripulación científica.", "error");
+                    return;
+                }
+
+                // Verificar si ya existe en la nube antes de registrar
+                let userExists = false;
+                try {
+                    const cloudUser = await window.getUserProfileFromCloud(username);
+                    if (cloudUser) userExists = true;
+                } catch (e) { console.warn(e); }
+
+                if (!userExists && localUsers[username]) {
+                    userExists = true;
+                }
+
+                if (userExists) {
+                    showSystemMessage("Error de Terminal", "El ID de usuario ya está registrado en este submarino.", "error");
                     return;
                 }
 
@@ -433,11 +512,43 @@
                 loginSuccess();
             } else {
                 // Modo Login
-                if (localUsers[username] && localUsers[username].pass === pass) {
-                    activeUser = localUsers[username];
+                let foundUser = null;
+
+                // 1. Intentar consultar prioritariamente en la nube de Firebase
+                try {
+                    const cloudUser = await window.getUserProfileFromCloud(username);
+                    if (cloudUser) {
+                        if (cloudUser.pass === pass) {
+                            foundUser = cloudUser;
+                            // Sincronizar en la memoria local por si se queda sin internet luego
+                            localUsers[username] = cloudUser;
+                            localStorage.setItem('ocean_users', JSON.stringify(localUsers));
+                        } else {
+                            showSystemMessage("Error de Acceso", "Código de seguridad de terminal erróneo.", "error");
+                            return;
+                        }
+                    }
+                } catch (e) {
+                    console.warn("Fallo de conexión a la nube, usando base de datos local de respaldo.", e);
+                }
+
+                // 2. Caída al localStorage local si falla o está fuera de línea
+                if (!foundUser) {
+                    if (localUsers[username]) {
+                        if (localUsers[username].pass === pass) {
+                            foundUser = localUsers[username];
+                        } else {
+                            showSystemMessage("Error de Acceso", "Código de seguridad cuántico incorrecto.", "error");
+                            return;
+                        }
+                    }
+                }
+
+                if (foundUser) {
+                    activeUser = foundUser;
                     loginSuccess();
                 } else {
-                    alert("Código de terminal no válido o credenciales erróneas.");
+                    showSystemMessage("Acceso Denegado", "No se encontró el ID de científico especificado.", "error");
                 }
             }
         }
@@ -447,6 +558,8 @@
             document.querySelectorAll('.lbl-alumna').forEach(el => el.innerText = activeUser.alumna);
             document.querySelectorAll('.lbl-cientifico').forEach(el => el.innerText = activeUser.cientifico);
             document.getElementById('diver-avatar-color').style.color = activeUser.color;
+            
+            showSystemMessage("Sincronización Exitosa", `Bienvenida de vuelta, Alumna Científica ${activeUser.alumna}.`, "success");
             renderDescentSpecies();
         }
 
@@ -455,6 +568,7 @@
             document.getElementById('auth-screen').classList.remove('hidden');
             document.getElementById('auth-username').value = "";
             document.getElementById('auth-password').value = "";
+            showSystemMessage("Desconexión", "Terminal cerrada de forma segura.", "info");
         }
 
         // --- SISTEMA DE AUDIO (Web Audio API) ---
@@ -478,6 +592,7 @@
                 }
                 playBubbleSound();
                 bubbleInterval = setInterval(playBubbleSound, 3500);
+                showSystemMessage("Sensores Acústicos", "Respirador y sonar submarino activados.", "success");
             } else {
                 icon.className = "fa-solid fa-volume-xmark text-slate-500";
                 clearInterval(bubbleInterval);
@@ -531,11 +646,7 @@
             if (tabId === 'enciclopedia') renderEncyclopedia();
         }
 
-        function startMission() {
-            document.getElementById('welcome-screen').classList.add('hidden');
-        }
-
-        // SCROLL
+        // SCROLL CONTROLLER
         window.addEventListener('scroll', () => {
             const currentTab = document.getElementById('view-explorar').classList.contains('hidden');
             if (currentTab || !activeUser) return;
@@ -575,28 +686,6 @@
             document.body.style.backgroundColor = `rgb(${r}, ${g}, ${b})`;
             updateDialogueOnScroll(depth);
         });
-
-        function updateDialogueOnScroll(depth) {
-            let zone = "";
-            let text = "";
-            const cientifico = activeUser?.cientifico || "Tío Manchas";
-
-            if (depth < 200) {
-                zone = "sol";
-                text = `"${cientifico} reportando: Estamos en la Zona Epipelágica (Luz). El sol sustenta la red fotosintética. Observa la Posidonia y las adaptaciones de la tortuga verde."`;
-            } else if (depth >= 200 && depth < 1000) {
-                zone = "crepusculo";
-                text = `"${cientifico} por radio: Cruzamos la Zona Mesopelágica. La presión sube y la luz disminuye. Aquí, los órganos fotosensibles de los celacantos operan al límite."`;
-            } else {
-                zone = "abisal";
-                text = `"${cientifico} reportando: Zona Batipelágica extrema. Sin fotosíntesis. La energía depende de la quimiosíntesis de las fuentes hidrotermales. ¡Increíble!"`;
-            }
-
-            if (zone !== lastZone) {
-                lastZone = zone;
-                document.getElementById('lbl-dialogue').innerText = text;
-            }
-        }
 
         // RENDER ESPECIES
         function renderDescentSpecies() {
@@ -701,7 +790,7 @@
                         c1.el.classList.add('matched');
                         c2.el.classList.add('matched');
                         memoryMatchedCount++;
-                        if (memoryMatchedCount === 6) alert("¡Excelente análisis biológico de memoria!");
+                        if (memoryMatchedCount === 6) showSystemMessage("Laboratorio Completado", "¡Excelente análisis biológico de memoria, guardando en bitácora!", "success");
                     } else {
                         c1.el.classList.remove('flipped');
                         c2.el.classList.remove('flipped');
@@ -742,14 +831,13 @@
         }
         function checkTriviaAdv(idx) {
             if (idx === triviaAdvQuestions[currentAdvTriviaIdx].c) {
-                alert("Calibración correcta del sensor biológico.");
-                playBubbleSound();
+                showSystemMessage("Análisis Aprobado", "Calibración correcta del sensor biológico.", "success");
             } else {
-                alert("Error de telemetría.");
+                showSystemMessage("Fallo de Telemetría", "Respuesta errónea, revisa los expedientes.", "error");
             }
             currentAdvTriviaIdx++;
             if (currentAdvTriviaIdx < triviaAdvQuestions.length) renderTriviaAdv();
-            else alert("Análisis finalizado.");
+            else showSystemMessage("Bitácora Cerrada", "Análisis finalizado para esta sección.", "info");
         }
 
         // 3. ROMPECABEZAS DESLIZANTE DE IMÁGENES DE ESPECIES
@@ -762,7 +850,7 @@
                 <div class="w-full max-w-sm space-y-4">
                     <div class="flex justify-between items-center mb-2">
                         <h3 class="text-xl font-bold text-sky-400 font-fun">Rompecabezas de Especies</h3>
-                        <select onchange="changePuzzleSpecies(this.value)" class="bg-slate-950 p-1.5 border border-slate-800 rounded font-mono-sci text-xs">
+                        <select onchange="changePuzzleSpecies(this.value)" class="bg-slate-950 p-1.5 border border-slate-800 rounded font-mono-sci text-xs text-sky-300">
                             <option value="octopus">Pulpo Común</option>
                             <option value="turtle">Tortuga Verde</option>
                             <option value="clownfish">Pez Payaso</option>
@@ -787,7 +875,7 @@
                 } else {
                     const row = Math.floor(tile / 3);
                     const col = tile % 3;
-                    const xPos = col * 50; // Mapeo de background offset
+                    const xPos = col * 50; 
                     const yPos = row * 50;
                     grid.innerHTML += `
                         <button onclick="movePuzzleImageTile(${index})" 
@@ -816,7 +904,7 @@
                 playBubbleSound();
                 renderPuzzleImage();
                 if (pGrid.every((val, i) => val === i)) {
-                    alert("¡Especie reconstruida con éxito de imagen!");
+                    showSystemMessage("Análisis Óptico", "¡Especie reconstruida con éxito de imagen!", "success");
                 }
             }
         }
@@ -824,7 +912,7 @@
         // 4. SIMULADOR DE FLOTABILIDAD (FÍSICA DE FLUIDOS)
         let subMass = 1000;
         let subVolume = 950;
-        const targetDensity = 1.025; // Densidad del agua salada g/cm³
+        const targetDensity = 1.025; 
         function startBuoyancyGame() {
             highlightGameTab('btn-play-buoyancy');
             subMass = 1000;
@@ -860,9 +948,9 @@
 
                     <p class="text-sm font-bold ${colorClass}">${stateMessage}</p>
 
-                    <div class="flex gap-4">
-                        <button onclick="adjustMass(-10)" class="flex-1 py-2 bg-rose-600 rounded-lg text-white font-bold">- Eliminar Lastre</button>
-                        <button onclick="adjustMass(10)" class="flex-1 py-2 bg-emerald-600 rounded-lg text-white font-bold">+ Agregar Lastre</button>
+                    <div class="flex gap-4 font-mono-sci">
+                        <button onclick="adjustMass(-10)" class="flex-1 py-2 bg-rose-600 rounded-lg text-white font-bold hover:bg-rose-500 transition">- Eliminar Lastre</button>
+                        <button onclick="adjustMass(10)" class="flex-1 py-2 bg-emerald-600 rounded-lg text-white font-bold hover:bg-emerald-500 transition">+ Agregar Lastre</button>
                     </div>
                 </div>
             `;
@@ -930,9 +1018,9 @@
         }
         function verifyTrophic() {
             if (trophicGrid[0] === "Posidonia" && trophicGrid[1] === "Pez Payaso" && trophicGrid[2] === "Morena" && trophicGrid[3] === "Tiburón Blanco") {
-                alert("¡Red trófica equilibrada perfectamente!");
+                showSystemMessage("Ecosistema Estable", "¡Red trófica equilibrada perfectamente!", "success");
             } else {
-                alert("Desequilibrio en la red de transferencia de energía. Inténtalo de nuevo.");
+                showSystemMessage("Crisis Trófica", "Desequilibrio en la red de transferencia de energía.", "error");
             }
         }
 
@@ -975,15 +1063,15 @@
         }
         function verifyChemo() {
             if (chemFormula.includes("CO₂") && chemFormula.includes("H₂O") && chemFormula.includes("H₂S") && chemFormula.includes("O₂")) {
-                alert("¡Fórmula cuántica quimiotrófica de glucosa balanceada!");
+                showSystemMessage("Reactor Termodinámico", "¡Fórmula cuántica quimiotrófica de glucosa balanceada!", "success");
             } else {
-                alert("Reacción inestable. Faltan componentes moleculares básicos.");
+                showSystemMessage("Reacción Fallida", "Reacción inestable. Faltan componentes moleculares básicos.", "error");
             }
         }
 
         // 7. RECONOCIMIENTO POR ECOLOCALIZACIÓN
         let sonarFreq = 400;
-        const targetFreq = 520; // Frecuencia del canto del cetáceo
+        const targetFreq = 520; 
         function startSonarGame() {
             highlightGameTab('btn-play-sonar');
             sonarFreq = 400;
@@ -992,8 +1080,13 @@
         function renderSonarLab() {
             const diff = Math.abs(sonarFreq - targetFreq);
             let matchText = "";
-            if (diff < 15) matchText = "🎯 Sincronización Acústica Completa: Canto de Ballena Azul identificado";
-            else matchText = "Señal ruidosa. Ajusta el canal hidrófono...";
+            let solved = false;
+            if (diff < 15) {
+                matchText = "🎯 Sincronización Acústica Completa: Canto de Ballena Azul identificado";
+                solved = true;
+            } else {
+                matchText = "Señal ruidosa. Ajusta el canal hidrófono...";
+            }
 
             const arena = document.getElementById('game-arena');
             arena.innerHTML = `
@@ -1009,6 +1102,9 @@
                     <p class="text-sm font-bold font-mono-sci text-sky-300 animate-pulse">${matchText}</p>
                 </div>
             `;
+            if (solved && Math.random() < 0.1) {
+                showSystemMessage("Frecuencia Coincidente", "Has detectado la señal acústica de la ballena azul.", "success");
+            }
         }
         function updateSonarFreq(val) {
             sonarFreq = parseInt(val);
@@ -1033,9 +1129,9 @@
         function verifyCrypto() {
             const ans = document.getElementById('crypto-ans').value.trim().toLowerCase();
             if (ans === "pulpo comun" || ans === "pulpo común") {
-                alert("¡Fórmula decodificada! Especie identificada.");
+                showSystemMessage("Descifrado Completado", "¡Fórmula decodificada! Octopus vulgaris mapeado en sistema.", "success");
             } else {
-                alert("Nombre erróneo. El criptograma de aminoácidos falló.");
+                showSystemMessage("Secuencia Inválida", "Nombre erróneo. El criptograma de aminoácidos falló.", "error");
             }
         }
 
